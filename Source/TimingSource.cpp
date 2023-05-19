@@ -16,12 +16,7 @@ TimingSource::~TimingSource()
 
 void TimingSource::setFrameRate(double framesPerSecond)
 {
-    threadMessages.postMessage([this, framesPerSecond]()
-        {
-            ticksPerFrame = juce::roundToInt((double)juce::Time::getHighResolutionTicksPerSecond() / framesPerSecond);
-
-            resetStats();
-        });
+    ticksPerFrame = juce::roundToInt((double)juce::Time::getHighResolutionTicksPerSecond() / framesPerSecond);
 }
 
 void TimingSource::setMode(int renderMode)

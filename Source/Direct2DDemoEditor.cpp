@@ -104,10 +104,15 @@ static void printStats(juce::Graphics& g,
     juce::StatisticsAccumulator<double> const& frameIntervalSeconds,
     juce::StatisticsAccumulator<double> const& frameDurationSeconds)
 {
-    if (auto average = frameIntervalSeconds.getAverage(); average > 0.0)
     {
-        g.drawText("FPS: " + juce::String{ 1.0 / average, 1 }, r, juce::Justification::centredLeft, false);
+        juce::String fps{ "FPS: " };
+        if (auto averageFPS = frameIntervalSeconds.getAverage(); averageFPS > 0.0)
+        {
+            fps += juce::String{ 1.0 / averageFPS, 1 };
+        }
+        g.drawText(fps, r, juce::Justification::centredLeft, false);
     }
+
     r.translate(0, 25);
     g.drawText(printStats("Paint interval (ms): ", frameIntervalSeconds), r, juce::Justification::centredLeft, false);
     r.translate(0, 25);
@@ -187,7 +192,11 @@ void Direct2DDemoEditor::updateFrameRate()
 {
     if (auto framesPerSecond = audioProcessor.parameters.frameRate.get(); framesPerSecond > 0.0)
     {
-        timingSource.setFrameRate(framesPerSecond);
+        threadMessages.postMessage([this, framesPerSecond]()
+            {
+                timingSource.setFrameRate(framesPerSecond);
+                resetStats();
+            });
     }
 }
 
