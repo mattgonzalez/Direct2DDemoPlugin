@@ -76,6 +76,7 @@ private:
     juce::Atomic<int> spectrumCount;
     int spectrumFillCount = 0;
     juce::dsp::FFT fft;
+    float fftNormalizationScale = 1.0f;
     juce::dsp::WindowingFunction<float> fftWindow;
     juce::AudioBuffer<float> accumulatorBuffer;
     float energyWeight = 1.0f;

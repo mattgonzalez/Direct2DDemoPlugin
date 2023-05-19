@@ -42,10 +42,12 @@ void RingBuffer::write(juce::AudioBuffer<float> const& source)
     writeCount += source.getNumSamples();
 }
 
-void RingBuffer::readWithoutAdvancing(juce::AudioBuffer<float>& destination, int numSamples)
+void RingBuffer::read(juce::AudioBuffer<float>& destination, int numSamplesToCopy, int ringAdvanceCount)
 {
+    jassert(destination.getNumSamples() >= numSamplesToCopy);
+
     int numChannels = juce::jmin(buffer.getNumChannels(), destination.getNumChannels());
-    int samplesRemaining = numSamples;
+    int samplesRemaining = numSamplesToCopy;
     int destinationIndex = 0;
     int bufferMask = buffer.getNumSamples() - 1;
     int sourceIndex = readCount & bufferMask;
@@ -67,38 +69,8 @@ void RingBuffer::readWithoutAdvancing(juce::AudioBuffer<float>& destination, int
         destinationIndex += copyCount;
         samplesRemaining -= copyCount;
     }
-}
 
-void RingBuffer::readFromPosition(juce::AudioBuffer<float>& destination, int position, int numSamples)
-{
-    int numChannels = juce::jmin(buffer.getNumChannels(), destination.getNumChannels());
-    int samplesRemaining = numSamples;
-    int destinationIndex = 0;
-    int bufferMask = buffer.getNumSamples() - 1;
-    int sourceIndex = position & bufferMask;
-    while (samplesRemaining > 0)
-    {
-        int copyCount = juce::jmin(samplesRemaining, destination.getNumSamples() - destinationIndex);
-        copyCount = juce::jmin(copyCount, buffer.getNumSamples() - sourceIndex);
-        if (copyCount <= 0)
-        {
-            break;
-        }
-
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            destination.copyFrom(channel, destinationIndex, buffer, channel, sourceIndex, copyCount);
-        }
-
-        sourceIndex = (sourceIndex + copyCount) & bufferMask;
-        destinationIndex += copyCount;
-        samplesRemaining -= copyCount;
-    }
-}
-
-void RingBuffer::advanceReadPosition(int count)
-{
-    readCount += count;
+    readCount += ringAdvanceCount;
 }
 
 int RingBuffer::getNumSamplesStored() const
@@ -106,32 +78,58 @@ int RingBuffer::getNumSamplesStored() const
     return (writeCount - readCount) & (buffer.getNumSamples() - 1);
 }
 
-float RingBuffer::getMonoValue(int position) const
-{
-    position &= (buffer.getNumSamples() - 1);
-
-    return buffer.getSample(0, position);// +buffer.getSample(1, position)) * 0.5f;
-}
-
-#if 0
+#if RUN_UNIT_TESTS
 
 class RingBufferTest : public juce::UnitTest
 {
 public:
     RingBufferTest() : UnitTest("RingBufferTest") {}
 
-    void checkRead(juce::AudioBuffer<float>& source, RingBuffer& rb)
+    int getRandomCount(int count)
+    {
+        return (count > 2) ? random.nextInt(juce::Range<int>(1, count)) : count;
+    }
+
+    void checkRead(juce::AudioBuffer<float> const& source)
     {
         juce::AudioBuffer<float> destination{ source.getNumChannels(), source.getNumSamples() };
-        rb.readWithoutAdvancing(destination);
-        for (int channel = 0; channel < source.getNumChannels(); ++channel)
+
+        int samplesRemaining = source.getNumSamples();
+        int sourceIndex = 0;
+        while (samplesRemaining > 0)
         {
-            for (int index = 0; index < source.getNumSamples(); ++index)
+            int copyCount = getRandomCount(samplesRemaining);
+            int advance = getRandomCount(copyCount);
+
+            destination.clear();
+            
+            int previousReadPosition = ringBuffer.getReadCount();
+            ringBuffer.read(destination, copyCount, advance);
+            expect(ringBuffer.getReadCount() == previousReadPosition + advance);
+
+            for (int channel = 0; channel < destination.getNumChannels(); ++channel)
             {
-                auto s1 = source.getSample(channel, index);
-                auto s2 = destination.getSample(channel, index);
-                float difference = std::abs(s1 - s2);
-                expect(difference <= std::numeric_limits<float>::epsilon());
+                for (int index = 0; index < copyCount; ++index)
+                {
+                    float sample = destination.getSample(channel, index);
+                    float expectedValue = source.getSample(channel, index + sourceIndex);
+
+                    expect(sample == expectedValue);
+                }
+            }
+
+            sourceIndex += advance;
+            samplesRemaining -= advance;
+        }
+    }
+
+    void makeRamp(juce::AudioBuffer<float>& buffer, float startValue)
+    {
+        for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+        {
+            for (int index = 0; index < buffer.getNumSamples(); ++index)
+            {
+                buffer.setSample(channel, index, channel * 1000.0f + startValue + (float)index);
             }
         }
     }
@@ -140,31 +138,26 @@ public:
     {
         beginTest("RingBuffer");
 
-        RingBuffer rb;
-        int numBufferSamples = 12;
-        rb.setSize(2, numBufferSamples);
+        int minimumRingSamples = 30;
+        ringBuffer.setSize(2, minimumRingSamples);
 
-        juce::AudioBuffer<float> source{ 2, numBufferSamples / 2 };
-        for (int channel = 0; channel < source.getNumChannels(); ++channel)
-        {
-            for (int index = 0; index < source.getNumSamples(); ++index)
-            {
-                source.setSample(channel, index, channel * 1000.0f + (float)index);
-            }
-        }
+        expect(juce::isPowerOfTwo(ringBuffer.getSize()) && ringBuffer.getSize() >= minimumRingSamples);
 
-        rb.write(source);
-        rb.write(source);
+        juce::AudioBuffer<float> source1{ 2, minimumRingSamples / 2 };
+        juce::AudioBuffer<float> source2{ 2, minimumRingSamples / 2 };
 
-        checkRead(source, rb);
-        
-        rb.advanceReadPosition(source.getNumSamples());
-        checkRead(source, rb);
+        makeRamp(source1, 1000000.0f);
+        ringBuffer.write(source1);
 
-        rb.write(source);
-        rb.advanceReadPosition(source.getNumSamples());
-        checkRead(source, rb);
+        makeRamp(source2, 2000000.0f);
+        ringBuffer.write(source2);
+
+        checkRead(source1);
+        checkRead(source2);
     }
+
+    RingBuffer ringBuffer;
+    juce::Random random;
 };
 
 static RingBufferTest test;

@@ -24,8 +24,12 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
     }
 
     fftOverlap = fft.getSize() / 2;
-    //juce::UnitTestRunner runner;
-    //runner.runAllTests();
+    fftNormalizationScale = 2.0f / (float)fft.getSize();
+    
+#if RUN_UNIT_TESTS
+    juce::UnitTestRunner runner;
+    runner.runAllTests();
+#endif
 }
 
 void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int samplesPerBlock)
@@ -104,20 +108,40 @@ void Direct2DDemoProcessor::processFFT()
 {
     int spectrumIndex = (spectrumCount.get() & 1) ^ 1; // note the XOR to get the other buffer
     auto& fftBuffer = spectrumBuffers[spectrumIndex];
-    auto& energyBuffer = energyBuffers[spectrumIndex];
+    auto& averageSpectrumBuffer = energyBuffers[spectrumIndex];
 
+    //
+    // Read enough samples from the ring to run the FFT
+    // -but-
+    // only partially advance the read count for the ring so the next FFT overlaps
+    //
     fftBuffer.clear();
-    ringBuffer.readWithoutAdvancing(fftBuffer, fft.getSize());
-    ringBuffer.advanceReadPosition(fftOverlap);
+    ringBuffer.read(fftBuffer, fft.getSize(), fftOverlap);
 
-    auto scale = 2.0f / (float)fft.getSize();
+    //
+    // Run the FFT for each channel
+    //
     for (int channel = 0; channel < fftBuffer.getNumChannels(); ++channel)
     {
+        //
+        // Apply windowing function to the input data
+        //
         fftWindow.multiplyWithWindowingTable(fftBuffer.getWritePointer(channel), fft.getSize());
+
+        //
+        // Run the FFT; performFrequencyOnlyForwardTransform takes the magnitude of the complex FFT output
+        //
         fft.performFrequencyOnlyForwardTransform(fftBuffer.getWritePointer(channel), true);
-        fftBuffer.applyGain(channel, 0, fftBuffer.getNumSamples() / 2, scale);
+
+        //
+        // Normalize the FFT output; can use applyGain here since these are real numbers
+        //
+        fftBuffer.applyGain(channel, 0, fftBuffer.getNumSamples() / 2, fftNormalizationScale);
     }
 
+    //
+    // Spectrum averaging
+    //
     float newScale = 1.0f - energyWeight;
     for (int channel = 0; channel < accumulatorBuffer.getNumChannels(); ++channel)
     {
@@ -128,12 +152,12 @@ void Direct2DDemoProcessor::processFFT()
             accumulatorBuffer.setSample(channel, bin, accumulator);
         }
 
-        jassert(energyBuffer.getNumSamples() == accumulatorBuffer.getNumSamples());
+        jassert(averageSpectrumBuffer.getNumSamples() == accumulatorBuffer.getNumSamples());
 
-        energyBuffer.copyFrom(channel, 0,
+        averageSpectrumBuffer.copyFrom(channel, 0,
             accumulatorBuffer,
             channel, 0,
-            energyBuffer.getNumSamples());
+            averageSpectrumBuffer.getNumSamples());
     }
 
     ++spectrumCount;

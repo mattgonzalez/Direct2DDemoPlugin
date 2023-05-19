@@ -8,12 +8,26 @@ public:
     void setSize(int numChannels, int numSamples);
     void reset(int storedSamples);
     void write(juce::AudioBuffer<float> const& source);
-    void readWithoutAdvancing(juce::AudioBuffer<float>& destination, int numSamples);
-    void readFromPosition(juce::AudioBuffer<float>& destination, int position, int numSamples);
-    void advanceReadPosition(int count);
+    void read(juce::AudioBuffer<float>& destination, int numSamplesToCopy, int ringAdvanceCount);
+
+    int getSize() const
+    {
+        return buffer.getNumSamples();
+    }
+
+    int getReadCount() const
+    {
+        return readCount;
+    }
+
+    int getWriteCount() const
+    {
+        return writeCount;
+    }
+
     int getNumSamplesStored() const;
-    float getMonoValue(int position) const;
     
+private:
     int readCount = 0;
     int writeCount = 0;
 
