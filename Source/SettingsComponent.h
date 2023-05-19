@@ -15,6 +15,7 @@ public:
     void paintDiagram(juce::Graphics& g);
 
     juce::PopupMenu::Options getOptionsForComboBoxPopupMenu(juce::ComboBox& box, juce::Label& label) override;
+    juce::Rectangle<int> getPropertyComponentContentPosition(juce::PropertyComponent&) override;
 
     juce::Rectangle<int> cornerBounds;
     juce::ComponentAnimator animator;

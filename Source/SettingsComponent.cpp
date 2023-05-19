@@ -122,3 +122,8 @@ juce::PopupMenu::Options SettingsComponent::getOptionsForComboBoxPopupMenu(juce:
     auto options = juce::LookAndFeel_V4::getOptionsForComboBoxPopupMenu(box, label);
     return options.withParentComponent(this);
 }
+
+juce::Rectangle<int> SettingsComponent::getPropertyComponentContentPosition(juce::PropertyComponent& component)
+{
+    return juce::LookAndFeel_V4::getPropertyComponentContentPosition(component).expanded(38, 0).translated(-38, 0);
+}
