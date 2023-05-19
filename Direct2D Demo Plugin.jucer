@@ -30,6 +30,10 @@
             file="Source/SpectrumRingDisplay.cpp"/>
       <FILE id="FVpAtB" name="SpectrumRingDisplay.h" compile="0" resource="0"
             file="Source/SpectrumRingDisplay.h"/>
+      <FILE id="kpagmZ" name="ThreadMessageQueue.cpp" compile="1" resource="0"
+            file="Source/ThreadMessageQueue.cpp"/>
+      <FILE id="MYzIdD" name="ThreadMessageQueue.h" compile="0" resource="0"
+            file="Source/ThreadMessageQueue.h"/>
       <FILE id="ugJn9t" name="TimingSource.cpp" compile="1" resource="0"
             file="Source/TimingSource.cpp"/>
       <FILE id="R06H7o" name="TimingSource.h" compile="0" resource="0" file="Source/TimingSource.h"/>

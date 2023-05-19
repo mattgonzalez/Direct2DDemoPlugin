@@ -5,7 +5,8 @@
 Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
     : AudioProcessorEditor(&p),
     audioProcessor(p),
-    timingSource(this, audioProcessor.readyEvent),
+    threadMessages(d2dAttachment.getLock()),
+    timingSource(this, audioProcessor.readyEvent, threadMessages),
     settingsComponent(p),
     energyPaintBuffer(2, p.getNumBins())
 {
@@ -186,7 +187,7 @@ void Direct2DDemoEditor::updateFrameRate()
 {
     if (auto framesPerSecond = audioProcessor.parameters.frameRate.get(); framesPerSecond > 0.0)
     {
-        timingSource.update(framesPerSecond, audioProcessor.parameters.renderer);
+        timingSource.setFrameRate(framesPerSecond);
     }
 }
 
@@ -197,7 +198,8 @@ void Direct2DDemoEditor::updateRenderer()
 
     resetStats();
 
-    switch (audioProcessor.parameters.renderer)
+    int renderMode = audioProcessor.parameters.renderer;
+    switch (renderMode)
     {
     case RenderMode::software:
     {
@@ -213,4 +215,5 @@ void Direct2DDemoEditor::updateRenderer()
     }
 
     updateFrameRate();
+    timingSource.setMode(renderMode);
 }

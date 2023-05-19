@@ -1,14 +1,16 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "ThreadMessageQueue.h"
 
 class TimingSource : public juce::Thread
 {
 public:
-    TimingSource(juce::Component* const component_, juce::WaitableEvent& audioInputEvent_);
+    TimingSource(juce::Component* const component_, juce::WaitableEvent& audioInputEvent_, ThreadMessageQueue& threadMessages_);
     ~TimingSource() override;
 
-    void update(double framesPerSecond, int renderMode);
+    void setFrameRate(double framesPerSecond);
+    void setMode(int renderMode);
 
     void resetStats();
 
@@ -25,6 +27,7 @@ public:
 private:
     juce::Component* const component;
     juce::WaitableEvent& audioInputEvent;
+    ThreadMessageQueue& threadMessages;
     std::unique_ptr<juce::VBlankAttachment> vblankAttachment;
     int64_t lastTimerTicks = juce::Time::getHighResolutionTicks();
     int64_t nextPaintTicks = lastTimerTicks;

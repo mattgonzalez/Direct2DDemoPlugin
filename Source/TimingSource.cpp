@@ -1,10 +1,11 @@
 #include "TimingSource.h"
 #include "Direct2DDemoEditor.h"
 
-TimingSource::TimingSource(juce::Component* const component_, juce::WaitableEvent& audioInputEvent_) :
+TimingSource::TimingSource(juce::Component* const component_, juce::WaitableEvent& audioInputEvent_, ThreadMessageQueue& threadMessages_) :
     Thread("TimingSource"),
     component(component_),
-    audioInputEvent(audioInputEvent_)
+    audioInputEvent(audioInputEvent_),
+    threadMessages(threadMessages_)
 {
 }
 
@@ -13,17 +14,18 @@ TimingSource::~TimingSource()
     stopAllTimers();
 }
 
-void TimingSource::update(double framesPerSecond, int renderMode)
+void TimingSource::setFrameRate(double framesPerSecond)
 {
-    //
-    // Update the ticks per frame & next frame time
-    //
-    // Not thread safe; room for improvement here...
-    //
-    ticksPerFrame = juce::roundToInt((double)juce::Time::getHighResolutionTicksPerSecond() / framesPerSecond);
-    
-    resetStats();
+    threadMessages.postMessage([this, framesPerSecond]()
+        {
+            ticksPerFrame = juce::roundToInt((double)juce::Time::getHighResolutionTicksPerSecond() / framesPerSecond);
 
+            resetStats();
+        });
+}
+
+void TimingSource::setMode(int renderMode)
+{
     switch (renderMode)
     {
     case RenderMode::software:
@@ -43,9 +45,6 @@ void TimingSource::update(double framesPerSecond, int renderMode)
 
 void TimingSource::resetStats()
 {
-    //
-    // Not thread safe...
-    //
     lastPaintTicks = 0;
     lastTimerTicks = 0;
     nextPaintTicks = juce::Time::getHighResolutionTicks() + ticksPerFrame;
@@ -102,6 +101,11 @@ void TimingSource::servicePaintTimer()
     }
 
     lastTimerTicks = now;
+
+    //
+    // Service the thread message queue
+    //
+    threadMessages.dispatchNextMessage();
 }
 
 void TimingSource::stopAllTimers()
