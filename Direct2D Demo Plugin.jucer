@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="fNv8Vr" name="Direct2D Demo Plugin" projectType="audioplug"
+              useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1"
+              pluginVST3Category="Analyzer" companyWebsite="echotm.com" bundleIdentifier="com.echotm.Direct2DDemoPlugin"
+              pluginManufacturer="Echo Test + Measurement" aaxIdentifier="com.echotm.Direct2DDemoPlugin"
+              pluginFormats="buildStandalone,buildVST3">
+  <MAINGROUP id="j43yYM" name="Direct2D Demo Plugin">
+    <GROUP id="{AF67DE6E-462D-758A-F6BA-2BD11FE946BA}" name="Source">
+      <FILE id="izTnvr" name="d2d.png" compile="0" resource="1" file="Source/d2d.png"/>
+      <FILE id="gH8DlC" name="Direct2DAttachment.cpp" compile="1" resource="0"
+            file="Source/Direct2DAttachment.cpp"/>
+      <FILE id="H7baNd" name="Direct2DAttachment.h" compile="0" resource="0"
+            file="Source/Direct2DAttachment.h"/>
+      <FILE id="YECgo8" name="Direct2DDemoEditor.cpp" compile="1" resource="0"
+            file="Source/Direct2DDemoEditor.cpp"/>
+      <FILE id="MBXWPh" name="Direct2DDemoEditor.h" compile="0" resource="0"
+            file="Source/Direct2DDemoEditor.h"/>
+      <FILE id="C7vzXb" name="Direct2DDemoProcessor.cpp" compile="1" resource="0"
+            file="Source/Direct2DDemoProcessor.cpp"/>
+      <FILE id="e6nLPo" name="Direct2DDemoProcessor.h" compile="0" resource="0"
+            file="Source/Direct2DDemoProcessor.h"/>
+      <FILE id="e6VdkY" name="RingBuffer.cpp" compile="1" resource="0" file="Source/RingBuffer.cpp"/>
+      <FILE id="WpRvYD" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
+      <FILE id="O4CABj" name="SettingsComponent.cpp" compile="1" resource="0"
+            file="Source/SettingsComponent.cpp"/>
+      <FILE id="jYMbAa" name="SettingsComponent.h" compile="0" resource="0"
+            file="Source/SettingsComponent.h"/>
+      <FILE id="qPyAev" name="SpectrumRingDisplay.cpp" compile="1" resource="0"
+            file="Source/SpectrumRingDisplay.cpp"/>
+      <FILE id="FVpAtB" name="SpectrumRingDisplay.h" compile="0" resource="0"
+            file="Source/SpectrumRingDisplay.h"/>
+      <FILE id="ugJn9t" name="TimingSource.cpp" compile="1" resource="0"
+            file="Source/TimingSource.cpp"/>
+      <FILE id="R06H7o" name="TimingSource.h" compile="0" resource="0" file="Source/TimingSource.h"/>
+      <FILE id="wOs7bt" name="ValueTreeDisplay.cpp" compile="1" resource="0"
+            file="Source/ValueTreeDisplay.cpp"/>
+      <FILE id="euSiwp" name="ValueTreeDisplay.h" compile="0" resource="0"
+            file="Source/ValueTreeDisplay.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="izTnvr" bigIcon="izTnvr">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Direct2DDemoPluginDebug"
+                       defines="JUCE_DIRECT2D=1&#10;JUCE_WAIT_FOR_VBLANK=1&#10;JUCE_DIRECT2D_PARTIAL_REPAINT=1&#10;JucePlugin_Name=&quot;Direct2DDemoPluginDebug&quot;"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Direct2DDemoPlugin" defines="JUCE_DIRECT2D=1&#10;JUCE_DIRECT2D_USE_DIRECT_COMPOSITION=1&#10;JUCE_WAIT_FOR_VBLANK=1&#10;JUCE_DIRECT2D_PARTIAL_REPAINT=1"
+                       useRuntimeLibDLL="0"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../../JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2022>
+  </EXPORTFORMATS>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+</JUCERPROJECT>
