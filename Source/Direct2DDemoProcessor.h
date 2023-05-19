@@ -58,6 +58,7 @@ public:
     double sampleRate = 48000.0;
     int const fftOrder = 11;
     int fftOverlap = 0;
+    double fftHertzPerBin = 0.0;
     juce::WaitableEvent readyEvent;
     RingBuffer ringBuffer;
 

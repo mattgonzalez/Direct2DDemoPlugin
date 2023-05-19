@@ -11,15 +11,16 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
     int numBins = juce::roundToInt((float)energyPaintBuffer.getNumSamples() * 2000.0f / (float)audioProcessor.getSampleRate());
 
-    float hertzPerBin = (float)audioProcessor.sampleRate / (float)audioProcessor.getNumBins();
-
+    //
+    // Calculate bass energy
+    //
     int numEnergyBins = 0;
     int firstEnergyBin = 0;
     float peakBassEnergy = 0.0f;
     for (int channel = 0; channel < energyPaintBuffer.getNumChannels(); ++channel)
     {
         float frequency = 50.0f;
-        int bin = (int)std::floor(frequency / hertzPerBin);
+        int bin = (int)std::floor(frequency / audioProcessor.fftHertzPerBin);
         firstEnergyBin = bin;
         numEnergyBins = 0;
         while (frequency <= 200.0f)
@@ -29,12 +30,15 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
             {
                 peakBassEnergy = energy;
             }
-            frequency += hertzPerBin;
+            frequency += (float)audioProcessor.fftHertzPerBin;
             bin++;
             numEnergyBins++;
         }
     }
-
+    
+    //
+    // Make ring segments if necessary
+    //
     int numRings = numBins;
     float maxRadius = juce::jmin(bounds.getWidth(), bounds.getHeight()) * 0.35f;
     auto center = bounds.getCentre().toFloat();
@@ -84,6 +88,9 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
         return;
     }
 
+    //
+    // Paint ring segments
+    //
     float segmentAngleSpacingInverse = 1.0f / segmentAngleSpacingRadians;
     float xScale = 1.0f, yScale = 1.0f;
     if (peakBassEnergy > 0.3f)

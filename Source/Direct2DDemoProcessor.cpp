@@ -31,6 +31,7 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
 void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int samplesPerBlock)
 {
     sampleRate = sampleRate_;
+    fftHertzPerBin = sampleRate_ / fft.getSize();
 
     double bufferLengthSeconds = 4.0;
     ringBuffer.setSize(2, juce::roundToInt(bufferLengthSeconds * sampleRate_) + samplesPerBlock);
