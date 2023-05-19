@@ -133,7 +133,7 @@ void Direct2DDemoEditor::paintStats(juce::Graphics& g)
     case RenderMode::software:
         if (auto peer = getPeer())
         {
-            printStats(g, r, peer->getMeasuredPaintIntervalSeconds(), peer->getMeasuredPaintDurationSeconds());
+            printStats(g, r, peer->measuredPaintIntervalSeconds, peer->measuredPaintDurationSeconds);
         }
         break;
 
@@ -175,8 +175,7 @@ void Direct2DDemoEditor::resetStats()
 {
     if (auto peer = getPeer())
     {
-        peer->getMeasuredPaintDurationSeconds().reset();
-        peer->getMeasuredPaintIntervalSeconds().reset();
+        peer->resetStats();
     }
 
     timingSource.resetStats();
