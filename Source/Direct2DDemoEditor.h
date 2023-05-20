@@ -20,6 +20,10 @@ public:
 
     void paint(juce::Graphics&) override;
     void paintWatermark(juce::Graphics& g);
+    void paintPaintStats(juce::Graphics& g,
+        juce::Rectangle<int> r,
+        juce::StatisticsAccumulator<double> const& frameIntervalSeconds,
+        juce::StatisticsAccumulator<double> const& frameDurationSeconds);
     void paintStats(juce::Graphics& g);
 
     void resized() override;

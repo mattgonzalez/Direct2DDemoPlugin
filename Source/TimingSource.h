@@ -23,6 +23,7 @@ public:
 
     int64_t const ticksPerSecond = juce::Time::getHighResolutionTicksPerSecond();
     double const secondsPerTick = 1.0 / (double)juce::Time::getHighResolutionTicksPerSecond();
+    double nominalFrameIntervalSeconds = 0.0;
 
 private:
     juce::Component* const component;

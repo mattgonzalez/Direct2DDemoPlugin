@@ -93,49 +93,92 @@ void Direct2DDemoEditor::paintWatermark(juce::Graphics& g)
     g.drawText(text, getLocalBounds(), juce::Justification::topLeft);
 }
 
-static void paintStat(juce::Graphics& g, juce::Rectangle<int> const r, juce::String name, juce::StatisticsAccumulator<double> const& stats)
+static void paintStat(juce::Graphics& g, juce::Rectangle<int> const r, juce::String name, double averageSeconds, juce::Colour averageColor, double standardDeviationSeconds, juce::Colour stdDevColor)
 {
-    auto average = stats.getAverage();
-    auto standardDeviation = stats.getStandardDeviation();
-
     juce::AttributedString as;
     auto font = g.getCurrentFont();
     as.setJustification(juce::Justification::centredLeft);
-    as.append(name + juce::String{ average * 1000.0, 1 } + " avg / ", font, juce::Colours::white);
-
-    auto color = juce::Colours::white;
-    
-    if (standardDeviation >= average * 0.5f)
-    {
-        color = juce::Colours::yellow;
-        font = font.boldened();
-        if (standardDeviation >= average * 0.8f)
-        {
-            color = juce::Colours::red;
-        }
-    }
-    as.append(juce::String{ standardDeviation * 1000.0, 1 } + " std.dev.", font, color);
+    as.append(name, font, juce::Colours::white);
+    as.append(juce::String{ averageSeconds * 1000.0, 1 } + " avg", font, averageColor);
+    as.append(" / ", font, juce::Colours::white);
+    as.append(juce::String{ standardDeviationSeconds * 1000.0, 1 } + " std.dev.", font, stdDevColor);
     as.draw(g, r.toFloat());
 }
 
-static void paintPaintStats(juce::Graphics& g,
+static void paintStat(juce::Graphics& g, juce::Rectangle<int> const r, juce::String name, juce::StatisticsAccumulator<double> const& stats)
+{
+    name << juce::String{ stats.getAverage() * 1000.0, 1 } << " avg / " << juce::String{ stats.getStandardDeviation() * 1000.0, 1 } << " std.dev.";
+    g.drawText(name, r, juce::Justification::centredLeft);
+}
+
+void Direct2DDemoEditor::paintPaintStats(juce::Graphics& g,
     juce::Rectangle<int> r,
     juce::StatisticsAccumulator<double> const& frameIntervalSeconds,
     juce::StatisticsAccumulator<double> const& frameDurationSeconds)
 {
+    juce::Colour averageFrameIntervalColor = juce::Colours::white;
+    auto averageFrameIntervalSeconds = frameIntervalSeconds.getAverage();
+    if (averageFrameIntervalSeconds > timingSource.nominalFrameIntervalSeconds * 2.0)
     {
-        juce::String fps{ "FPS: " };
-        if (auto averageFPS = frameIntervalSeconds.getAverage(); averageFPS > 0.0)
-        {
-            fps += juce::String{ 1.0 / averageFPS, 1 };
-        }
-        g.drawText(fps, r, juce::Justification::centredLeft, false);
+        averageFrameIntervalColor = juce::Colours::red;
+    }
+    else if (averageFrameIntervalSeconds > timingSource.nominalFrameIntervalSeconds * 1.5)
+    {
+        averageFrameIntervalColor = juce::Colours::yellow;
     }
 
-    r.translate(0, 25);
-    paintStat(g, r, "Paint interval (ms): ", frameIntervalSeconds);
-    r.translate(0, 25);
-    paintStat(g, r, "Paint duration (ms): ", frameDurationSeconds);
+    {
+        g.setColour(juce::Colours::white);
+        g.drawText("FPS:", r, juce::Justification::centredLeft, false);
+        if (auto averageFrameInterval = frameIntervalSeconds.getAverage(); averageFrameInterval > 0.0)
+        {
+            g.setColour(averageFrameIntervalColor);
+            g.drawText(juce::String{ 1.0 / averageFrameInterval, 1 }, r.translated(50, 0), juce::Justification::centredLeft);
+        }
+        r.translate(0, 25);
+    }
+
+    {
+        juce::Colour standardDeviationColor = juce::Colours::white;
+        auto standardDeviation = frameIntervalSeconds.getStandardDeviation();
+        if (standardDeviation > averageFrameIntervalSeconds)
+        {
+            standardDeviationColor = juce::Colours::red;
+        }
+        else if (standardDeviation > averageFrameIntervalSeconds * 0.5)
+        {
+            standardDeviationColor = juce::Colours::yellow;
+        }
+
+        paintStat(g, r, "Paint interval (ms): ", averageFrameIntervalSeconds, averageFrameIntervalColor, standardDeviation, standardDeviationColor);
+        r.translate(0, 25);
+    }
+
+    {
+        juce::Colour averageDurationColor = juce::Colours::white;
+        auto averageDurationSeconds = frameDurationSeconds.getAverage();
+        if (averageDurationSeconds > averageFrameIntervalSeconds * 1.0)
+        {
+            averageDurationColor = juce::Colours::red;
+        }
+        else if (averageDurationSeconds > averageFrameIntervalSeconds * 0.8)
+        {
+            averageFrameIntervalColor = juce::Colours::yellow;
+        }
+
+        juce::Colour standardDeviationColor = juce::Colours::white;
+        auto Seconds = frameDurationSeconds.getStandardDeviation();
+        if (Seconds > averageDurationSeconds)
+        {
+            standardDeviationColor = juce::Colours::red;
+        }
+        else if (Seconds > averageDurationSeconds * 0.5)
+        {
+            standardDeviationColor = juce::Colours::yellow;
+        }
+
+        paintStat(g, r, "Paint duration (ms): ", averageDurationSeconds, averageDurationColor, Seconds, standardDeviationColor);
+    }
 }
 
 void Direct2DDemoEditor::paintStats(juce::Graphics& g)

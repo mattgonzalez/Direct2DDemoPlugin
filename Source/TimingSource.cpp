@@ -16,6 +16,7 @@ TimingSource::~TimingSource()
 
 void TimingSource::setFrameRate(double framesPerSecond)
 {
+    nominalFrameIntervalSeconds = 1.0 / framesPerSecond;
     ticksPerFrame = juce::roundToInt((double)juce::Time::getHighResolutionTicksPerSecond() / framesPerSecond);
 }
 
