@@ -7,7 +7,7 @@
 class SpectrumRingDisplay
 {
 public:
-    SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_, juce::AudioBuffer<float> const& energyPaintBuffer_);
+    SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_, Spectrum<float> const& energyPaintSpectrum_);
     ~SpectrumRingDisplay() = default;
 
     void paint(juce::Graphics& g, juce::Rectangle<int> bounds);
@@ -15,7 +15,7 @@ public:
 protected:
     Direct2DDemoProcessor& audioProcessor;
     Direct2DAttachment& direct2DAttachment;
-    juce::AudioBuffer<float> const& energyPaintBuffer;
+    Spectrum<float> const& energyPaintSpectrum;
     
     juce::OwnedArray<juce::Path> segmentPaths;
     juce::Rectangle<int> ringBounds;

@@ -1,15 +1,15 @@
 #include "SpectrumRingDisplay.h"
 
-SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_, juce::AudioBuffer<float> const& energyPaintBuffer_) :
+SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_, Spectrum<float> const& energyPaintSpectrum_) :
     audioProcessor(processor_),
     direct2DAttachment(direct2DAttachment_),
-    energyPaintBuffer(energyPaintBuffer_)
+    energyPaintSpectrum(energyPaintSpectrum_)
 {
 }
 
 void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
 {
-    int numBins = juce::roundToInt((float)energyPaintBuffer.getNumSamples() * 2000.0f / (float)audioProcessor.getSampleRate());
+    int numBins = juce::roundToInt((float)energyPaintSpectrum.getNumBins() * 2000.0f / (float)audioProcessor.getSampleRate());
 
     //
     // Calculate bass energy
@@ -17,7 +17,7 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
     int numEnergyBins = 0;
     int firstEnergyBin = 0;
     float peakBassEnergy = 0.0f;
-    for (int channel = 0; channel < energyPaintBuffer.getNumChannels(); ++channel)
+    for (int channel = 0; channel < energyPaintSpectrum.getNumChannels(); ++channel)
     {
         float frequency = 50.0f;
         int bin = (int)std::floor(frequency / audioProcessor.fftHertzPerBin);
@@ -25,7 +25,7 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
         numEnergyBins = 0;
         while (frequency <= 200.0f)
         {
-            auto energy = energyPaintBuffer.getSample(channel, bin);
+            auto energy = energyPaintSpectrum.getBinMagnitude(channel, bin);
             if (energy > peakBassEnergy)
             {
                 peakBassEnergy = energy;
@@ -110,14 +110,14 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
         yScale /= aspectRatioWidthOverHeight;
     }
 
-    for (int channel = 0; channel < energyPaintBuffer.getNumChannels(); ++channel)
+    for (int channel = 0; channel < energyPaintSpectrum.getNumChannels(); ++channel)
     {
         for (int ring = 0; ring < numRings; ++ring)
         {
             float upperAngle = -juce::MathConstants<float>::halfPi + juce::MathConstants<float>::pi * channel;
             float lowerAngle = upperAngle - segmentAngleSpacingRadians;
 
-            float energyLinear = energyPaintBuffer.getSample(channel, ring);
+            float energyLinear = energyPaintSpectrum.getBinMagnitude(channel, ring);
             energyLinear = juce::jmin(1.0f, energyLinear);
             int numSegments = (int)std::floor(juce::MathConstants<float>::halfPi * segmentAngleSpacingInverse * energyLinear);
 

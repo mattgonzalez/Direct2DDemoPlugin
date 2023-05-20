@@ -36,7 +36,7 @@ private:
 #if JUCE_DEBUG
     ValueTreeDisplayWindow valueTreeDisplay;
 #endif
-    juce::AudioBuffer<float> energyPaintBuffer;
+    Spectrum<float> energyPaintSpectrum;
     std::unique_ptr<SpectrumRingDisplay> painter;
 
     void updateFrameRate();

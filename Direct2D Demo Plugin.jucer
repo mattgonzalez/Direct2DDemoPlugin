@@ -26,6 +26,8 @@
             file="Source/SettingsComponent.cpp"/>
       <FILE id="jYMbAa" name="SettingsComponent.h" compile="0" resource="0"
             file="Source/SettingsComponent.h"/>
+      <FILE id="Mqcfjv" name="Spectrum.cpp" compile="1" resource="0" file="Source/Spectrum.cpp"/>
+      <FILE id="eq6dwK" name="Spectrum.h" compile="0" resource="0" file="Source/Spectrum.h"/>
       <FILE id="qPyAev" name="SpectrumRingDisplay.cpp" compile="1" resource="0"
             file="Source/SpectrumRingDisplay.cpp"/>
       <FILE id="FVpAtB" name="SpectrumRingDisplay.h" compile="0" resource="0"

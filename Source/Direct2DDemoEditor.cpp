@@ -8,7 +8,7 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
     threadMessages(d2dAttachment.getLock()),
     timingSource(this, audioProcessor.readyEvent, threadMessages),
     settingsComponent(p),
-    energyPaintBuffer(2, p.getNumBins())
+    energyPaintSpectrum(2, p.getNumBins())
 {
     setResizable(true, false);
 
@@ -24,7 +24,7 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
     valueTreeDisplay.addTree(audioProcessor.state.state);
 #endif
 
-    painter = std::make_unique<SpectrumRingDisplay>(p, d2dAttachment, energyPaintBuffer);
+    painter = std::make_unique<SpectrumRingDisplay>(p, d2dAttachment, energyPaintSpectrum);
 
     timingSource.onPaintTimer = [this]() { paintTimerCallback(); };
 
@@ -64,10 +64,7 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
 
     g.fillAll(juce::Colours::black);
 
-    for (int channel = 0; channel < energyPaintBuffer.getNumChannels(); ++channel)
-    {
-        energyPaintBuffer.copyFrom(channel, 0, audioProcessor.getEnergySpectrum(), channel, 0, energyPaintBuffer.getNumSamples());
-    }
+    energyPaintSpectrum.copyFrom(audioProcessor.getEnergySpectrum());
 
     painter->paint(g, getLocalBounds());
 

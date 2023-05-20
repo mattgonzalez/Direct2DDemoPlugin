@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "RingBuffer.h"
+#include "Spectrum.h"
 
 enum RenderMode
 {
@@ -44,8 +45,8 @@ public:
     void getStateInformation(juce::MemoryBlock&) override {}
     void setStateInformation(const void*, int) override {}
 
-    juce::AudioBuffer<float> const& getSpectrum() const;
-    juce::AudioBuffer<float> const& getEnergySpectrum() const;
+    Spectrum<float> const& getSpectrum() const;
+    Spectrum<float> const& getEnergySpectrum() const;
     int getNumBins() const
     {
         return fft.getSize() / 2;
@@ -71,13 +72,14 @@ public:
     } parameters;
 
 private:
-    juce::AudioBuffer<float> spectrumBuffers[2];
-    juce::AudioBuffer<float> energyBuffers[2];
+    Spectrum<float> spectra[2];
+    Spectrum<float> energySpectra[2];
     juce::Atomic<int> spectrumCount;
     int spectrumFillCount = 0;
     juce::dsp::FFT fft;
     float fftNormalizationScale = 1.0f;
     juce::dsp::WindowingFunction<float> fftWindow;
+    juce::AudioBuffer<float> fftWorkBuffer;
     juce::AudioBuffer<float> accumulatorBuffer;
     float energyWeight = 1.0f;
 
