@@ -7,8 +7,7 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
     audioProcessor(p),
     threadMessages(d2dAttachment.getLock()),
     timingSource(this, audioProcessor.readyEvent, threadMessages),
-    settingsComponent(p),
-    energyPaintSpectrum(2, p.getNumBins())
+    settingsComponent(p)
 {
     setResizable(true, false);
 
@@ -25,6 +24,7 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
 #endif
 
     painter = std::make_unique<SpectrumRingDisplay>(p, d2dAttachment, energyPaintSpectrum);
+    energyPaintSpectrum = RealSpectrum<float>{}.withChannels(2).withFFTSize(p.getFFTLength());
 
     timingSource.onPaintTimer = [this]() { paintTimerCallback(); };
 

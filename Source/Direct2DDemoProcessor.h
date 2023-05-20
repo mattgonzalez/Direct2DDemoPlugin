@@ -45,11 +45,11 @@ public:
     void getStateInformation(juce::MemoryBlock&) override {}
     void setStateInformation(const void*, int) override {}
 
-    Spectrum<float> const& getSpectrum() const;
-    Spectrum<float> const& getEnergySpectrum() const;
-    int getNumBins() const
+    RealSpectrum<float> const& getSpectrum() const;
+    RealSpectrum<float> const& getEnergySpectrum() const;
+    int getFFTLength() const
     {
-        return fft.getSize() / 2;
+        return fft.getSize();
     }
 
     const juce::String frameRateID = "FrameRate";
@@ -72,15 +72,15 @@ public:
     } parameters;
 
 private:
-    Spectrum<float> spectra[2];
-    Spectrum<float> energySpectra[2];
+    RealSpectrum<float> spectra[2];
+    RealSpectrum<float> energySpectra[2];
     juce::Atomic<int> spectrumCount;
     int spectrumFillCount = 0;
     juce::dsp::FFT fft;
     float fftNormalizationScale = 1.0f;
     juce::dsp::WindowingFunction<float> fftWindow;
     juce::AudioBuffer<float> fftWorkBuffer;
-    juce::AudioBuffer<float> accumulatorBuffer;
+    RealSpectrum<float> accumulatorBuffer;
     float energyWeight = 1.0f;
 
     void processFFT();

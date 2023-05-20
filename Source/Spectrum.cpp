@@ -1,39 +1,14 @@
 #include "Spectrum.h"
 
-template<> float Spectrum<float>::getBinMagnitude(int channel, int bin) const
+template <>
+float SpectrumTest::TypeTest<float, float>::makeRampValue(int channel, int index)
 {
-    return spectrumBuffer.getSample(channel, bin);
+    return (channel + 1) * 10000000.0f + index;
 }
 
-template<> void Spectrum<float>::clear()
+template <>
+std::complex<float> SpectrumTest::TypeTest<float, std::complex<float>>::makeRampValue(int channel, int index)
 {
-    spectrumBuffer.clear();
-}
-
-template<> void Spectrum<double>::clear()
-{
-    spectrumBuffer.clear();
-}
-
-template<> double Spectrum<double>::getBinMagnitude(int channel, int bin) const
-{
-    return spectrumBuffer.getSample(channel, bin);
-}
-
-template<> void Spectrum<std::complex<float>>::clear()
-{
-    for (int channel = 0; channel < spectrumBuffer.getNumChannels(); ++channel)
-    {
-        memset(spectrumBuffer.getWritePointer(channel), 0, spectrumBuffer.getNumSamples() * sizeof(std::complex<float>));
-    }
-}
-
-template<> std::complex<double> Spectrum<std::complex<double>>::getBinMagnitude(int channel, int bin) const
-{
-    return std::abs(spectrumBuffer.getSample(channel, bin));
-}
-
-template<> std::complex<float> Spectrum<std::complex<float>>::getBinMagnitude(int channel, int bin) const
-{
-    return std::abs(spectrumBuffer.getSample(channel, bin));
+    float radius = (channel + 1) * 10000000.0f + index;
+    return std::polar(radius, index * juce::MathConstants<float>::twoPi * 0.01f);
 }

@@ -33,3 +33,22 @@ private:
 
     juce::AudioBuffer<float> buffer;
 };
+
+#if RUN_UNIT_TESTS
+
+class RingBufferTest : public juce::UnitTest
+{
+public:
+    RingBufferTest();
+
+    int getRandomCount(int count);
+    void checkRead(juce::AudioBuffer<float> const& source);
+    void makeRamp(juce::AudioBuffer<float>& buffer, float startValue);
+
+    void runTest() override;
+
+    RingBuffer ringBuffer;
+    juce::Random random;
+};
+
+#endif

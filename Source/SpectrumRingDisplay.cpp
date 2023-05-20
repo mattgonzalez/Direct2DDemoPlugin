@@ -1,6 +1,6 @@
 #include "SpectrumRingDisplay.h"
 
-SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_, Spectrum<float> const& energyPaintSpectrum_) :
+SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_, RealSpectrum<float> const& energyPaintSpectrum_) :
     audioProcessor(processor_),
     direct2DAttachment(direct2DAttachment_),
     energyPaintSpectrum(energyPaintSpectrum_)

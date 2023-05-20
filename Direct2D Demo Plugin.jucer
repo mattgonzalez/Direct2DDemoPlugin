@@ -4,7 +4,8 @@
               useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1"
               pluginVST3Category="Analyzer" companyWebsite="echotm.com" bundleIdentifier="com.echotm.Direct2DDemoPlugin"
               pluginManufacturer="Echo Test + Measurement" aaxIdentifier="com.echotm.Direct2DDemoPlugin"
-              pluginFormats="buildStandalone,buildVST3">
+              pluginFormats="buildStandalone,buildVST3" defines="RUN_UNIT_TESTS=1"
+              cppLanguageStandard="latest">
   <MAINGROUP id="j43yYM" name="Direct2D Demo Plugin">
     <GROUP id="{AF67DE6E-462D-758A-F6BA-2BD11FE946BA}" name="Source">
       <FILE id="izTnvr" name="d2d.png" compile="0" resource="1" file="Source/d2d.png"/>
@@ -39,6 +40,7 @@
       <FILE id="ugJn9t" name="TimingSource.cpp" compile="1" resource="0"
             file="Source/TimingSource.cpp"/>
       <FILE id="R06H7o" name="TimingSource.h" compile="0" resource="0" file="Source/TimingSource.h"/>
+      <FILE id="cx9nLR" name="UnitTests.h" compile="0" resource="0" file="Source/UnitTests.h"/>
       <FILE id="wOs7bt" name="ValueTreeDisplay.cpp" compile="1" resource="0"
             file="Source/ValueTreeDisplay.cpp"/>
       <FILE id="euSiwp" name="ValueTreeDisplay.h" compile="0" resource="0"
@@ -50,8 +52,8 @@
     <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="izTnvr" bigIcon="izTnvr">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="Direct2DDemoPluginDebug"
-                       defines="JUCE_DIRECT2D=1&#10;JUCE_WAIT_FOR_VBLANK=1&#10;JUCE_DIRECT2D_PARTIAL_REPAINT=1&#10;JucePlugin_Name=&quot;Direct2DDemoPluginDebug&quot;"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="Direct2DDemoPlugin" defines="JUCE_DIRECT2D=1&#10;JUCE_DIRECT2D_USE_DIRECT_COMPOSITION=1&#10;JUCE_WAIT_FOR_VBLANK=1&#10;JUCE_DIRECT2D_PARTIAL_REPAINT=1"
+                       defines="JUCE_DIRECT2D=1&#10;JUCE_WAIT_FOR_VBLANK=1&#10;JUCE_DIRECT2D_PARTIAL_REPAINT=1&#10;JucePlugin_Name=&quot;Direct2DDemoPluginDebug&quot;&#10;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING=1"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Direct2DDemoPlugin" defines="JUCE_DIRECT2D=1&#10;JUCE_DIRECT2D_USE_DIRECT_COMPOSITION=1&#10;JUCE_WAIT_FOR_VBLANK=1&#10;JUCE_DIRECT2D_PARTIAL_REPAINT=1&#10;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING=1"
                        useRuntimeLibDLL="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>

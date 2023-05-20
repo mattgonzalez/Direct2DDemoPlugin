@@ -1,5 +1,6 @@
 #include "Direct2DDemoProcessor.h"
 #include "Direct2DDemoEditor.h"
+#include "UnitTests.h"
 
 Direct2DDemoProcessor::Direct2DDemoProcessor() :
     AudioProcessor(BusesProperties()
@@ -21,8 +22,9 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
 {
     fftOverlap = fft.getSize() / 2;
     fftNormalizationScale = 2.0f / (float)fft.getSize();
-    
+
 #if RUN_UNIT_TESTS
+    UnitTests unitTests;
     juce::UnitTestRunner runner;
     runner.runAllTests();
 #endif
@@ -44,16 +46,16 @@ void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int samplesPerBloc
 
     for (auto& energyBuffer : energySpectra)
     {
-        energyBuffer = Spectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
+        energyBuffer = RealSpectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
         energyBuffer.clear();
     }
 
-    accumulatorBuffer.setSize(2, getNumBins());
+    accumulatorBuffer = RealSpectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
     accumulatorBuffer.clear();
 
     for (auto& spectrumBuffer : spectra)
     {
-        spectrumBuffer = Spectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
+        spectrumBuffer = RealSpectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
         spectrumBuffer.clear();
     }
     spectrumFillCount = 0;
@@ -142,27 +144,26 @@ void Direct2DDemoProcessor::processFFT()
     float newScale = 1.0f - energyWeight;
     for (int channel = 0; channel < accumulatorBuffer.getNumChannels(); ++channel)
     {
-        for (int bin = 0; bin < getNumBins(); ++bin)
+        for (int bin = 0; bin < accumulatorBuffer.getNumBins(); ++bin)
         {
-            auto accumulator = accumulatorBuffer.getSample(channel, bin);
+            auto accumulator = accumulatorBuffer.getBinMagnitude(channel, bin);
             accumulator = accumulator * energyWeight + spectrum.getBinMagnitude(channel, bin) * newScale;
-            accumulatorBuffer.setSample(channel, bin, accumulator);
+            accumulatorBuffer.setBinValue(channel, bin, accumulator);
         }
-
-        averageSpectrum.copyFrom(accumulatorBuffer, averageSpectrum.getNumBins());
-        (accumulatorBuffer, averageSpectrum.getNumBins());
     }
+
+    averageSpectrum.copyFrom(accumulatorBuffer);
 
     ++spectrumCount;
 }
 
-Spectrum<float> const& Direct2DDemoProcessor::getSpectrum() const
+RealSpectrum<float> const& Direct2DDemoProcessor::getSpectrum() const
 {
     int spectrumIndex = spectrumCount.get() & 1;
     return spectra[spectrumIndex];
 }
 
-Spectrum<float> const& Direct2DDemoProcessor::getEnergySpectrum() const
+RealSpectrum<float> const& Direct2DDemoProcessor::getEnergySpectrum() const
 {
     int spectrumIndex = spectrumCount.get() & 1;
     return energySpectra[spectrumIndex];
