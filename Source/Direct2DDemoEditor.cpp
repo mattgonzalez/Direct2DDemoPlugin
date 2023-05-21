@@ -25,6 +25,7 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
 
     painter = std::make_unique<SpectrumRingDisplay>(p, d2dAttachment, energyPaintSpectrum);
     energyPaintSpectrum = RealSpectrum<float>{}.withChannels(2).withFFTSize(p.getFFTLength());
+    energyPaintSpectrum.clear();
 
     timingSource.onPaintTimer = [this]() { paintTimerCallback(); };
 
@@ -57,9 +58,14 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
         return;
     }
 
-    g.fillAll(juce::Colours::black);
+    if (audioProcessor.outputRingBuffer.getNumItemsStored() > 0)
+    {
+        auto processorOutput = audioProcessor.outputRingBuffer.getMostRecent();
+        energyPaintSpectrum.copyFrom(processorOutput->energySpectrum);
+        audioProcessor.outputRingBuffer.advanceReadPosition();
+    }
 
-    energyPaintSpectrum.copyFrom(audioProcessor.getEnergySpectrum());
+    g.fillAll(juce::Colours::black);
 
     painter->paint(g, getLocalBounds());
 
@@ -168,17 +174,17 @@ void Direct2DDemoEditor::paintPaintStats(juce::Graphics& g,
         }
 
         juce::Colour standardDeviationColor = juce::Colours::white;
-        auto Seconds = frameDurationSeconds.getStandardDeviation();
-        if (Seconds > averageDurationSeconds)
+        auto standardDeviationSeconds = frameDurationSeconds.getStandardDeviation();
+        if (standardDeviationSeconds > timingSource.nominalFrameIntervalSeconds)
         {
             standardDeviationColor = juce::Colours::red;
         }
-        else if (Seconds > averageDurationSeconds * 0.5)
+        else if (standardDeviationSeconds > timingSource.nominalFrameIntervalSeconds * 0.5)
         {
             standardDeviationColor = juce::Colours::yellow;
         }
 
-        paintStat(g, r, "Paint duration (ms): ", averageDurationSeconds, averageDurationColor, Seconds, standardDeviationColor);
+        paintStat(g, r, "Paint duration (ms): ", averageDurationSeconds, averageDurationColor, standardDeviationSeconds, standardDeviationColor);
         r.translate(0, r.getHeight());
     }
 

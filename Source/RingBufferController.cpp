@@ -68,3 +68,8 @@ void RingBufferController::advanceWritePosition(int count)
 {
     writeCount += count;
 }
+
+void RingBufferController::flush()
+{
+    readCount = writeCount;
+}

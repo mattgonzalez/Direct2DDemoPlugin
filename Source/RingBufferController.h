@@ -29,6 +29,7 @@ public:
     int getSafeTransferCount(int numItemsWanted, int position) const;
     void advanceReadPosition(int count);
     void advanceWritePosition(int count);
+    void flush();
 
 private:
     int readCount = 0;

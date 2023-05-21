@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "AudioRingBuffer.h"
 #include "Spectrum.h"
+#include "ProcessorOutputRingBuffer.h"
 
 enum RenderMode
 {
@@ -45,8 +46,6 @@ public:
     void getStateInformation(juce::MemoryBlock&) override {}
     void setStateInformation(const void*, int) override {}
 
-    RealSpectrum<float> const& getSpectrum() const;
-    RealSpectrum<float> const& getEnergySpectrum() const;
     int getFFTLength() const
     {
         return fft.getSize();
@@ -57,11 +56,12 @@ public:
 
     juce::AudioProcessorValueTreeState state;
     double sampleRate = 48000.0;
-    int const fftOrder = 11;
+    int const fftOrder = 10;
     int fftOverlap = 0;
     double fftHertzPerBin = 0.0;
     juce::WaitableEvent readyEvent;
-    AudioRingBuffer ringBuffer;
+    AudioRingBuffer inputRingBuffer;
+    ProcessorOutputRingBuffer outputRingBuffer;
 
     struct Parameters
     {
@@ -72,14 +72,11 @@ public:
     } parameters;
 
 private:
-    RealSpectrum<float> spectra[2];
-    RealSpectrum<float> energySpectra[2];
-    juce::Atomic<int> spectrumCount;
     juce::dsp::FFT fft;
     float fftNormalizationScale = 1.0f;
     juce::dsp::WindowingFunction<float> fftWindow;
     juce::AudioBuffer<float> fftWorkBuffer;
-    RealSpectrum<float> accumulatorBuffer;
+    RealSpectrum<float> averagingSpectrum;
     float energyWeight = 1.0f;
 
     void processFFT();

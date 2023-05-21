@@ -20,7 +20,7 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
     fftWindow(fft.getSize(), juce::dsp::WindowingFunction<float>::blackmanHarris, true),
     fftWorkBuffer(2, fft.getSize() * 2)
 {
-    fftOverlap = fft.getSize() / 2;
+    fftOverlap = fft.getSize() / 4;
     fftNormalizationScale = 2.0f / (float)fft.getSize();
 
 #if RUN_UNIT_TESTS
@@ -35,28 +35,18 @@ void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int /*samplesPerBl
     sampleRate = sampleRate_;
     fftHertzPerBin = sampleRate_ / fft.getSize();
 
-    ringBuffer.setSize(2, fft.getSize() * 4);
-    ringBuffer.reset(0);
+    inputRingBuffer.setSize(2, fft.getSize() * 4);
+    inputRingBuffer.reset(0);
 
-    auto spectraPerSecond = sampleRate_ / (double)fftOverlap;
-    float constexpr energyAveragingSeconds = 0.070f;
-    float energyAveragingSpectra = (float)(spectraPerSecond * energyAveragingSeconds);
-    energyWeight = 1.0f - 1.0f / energyAveragingSpectra;
+    outputRingBuffer.setSize(2 /* numItems */, 2 /* numChannels */, fft.getSize());
+    outputRingBuffer.reset();
 
-    for (auto& energyBuffer : energySpectra)
-    {
-        energyBuffer = RealSpectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
-        energyBuffer.clear();
-    }
+    auto spectraPerSecond = (float)sampleRate_ / fftOverlap;
+    float constexpr energyAveragingSeconds = 0.1f;
+    energyWeight = 1.0f - 1.0f / (spectraPerSecond * energyAveragingSeconds);
 
-    accumulatorBuffer = RealSpectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
-    accumulatorBuffer.clear();
-
-    for (auto& spectrumBuffer : spectra)
-    {
-        spectrumBuffer = RealSpectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
-        spectrumBuffer.clear();
-    }
+    averagingSpectrum = RealSpectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
+    averagingSpectrum.clear();
 }
 
 void Direct2DDemoProcessor::releaseResources()
@@ -80,8 +70,8 @@ void Direct2DDemoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     //
     // FFT
     //
-    ringBuffer.write(buffer);
-    while (ringBuffer.getNumSamplesStored() >= fft.getSize())
+    inputRingBuffer.write(buffer);
+    while (inputRingBuffer.getNumSamplesStored() >= fft.getSize())
     {
         processFFT();
     }
@@ -103,9 +93,9 @@ void printBuffer(juce::AudioBuffer<float>& buffer)
 
 void Direct2DDemoProcessor::processFFT()
 {
-    int spectrumIndex = (spectrumCount.get() & 1) ^ 1; // note the XOR to get the other buffer
-    auto& spectrum = spectra[spectrumIndex];
-    auto& averageSpectrum = energySpectra[spectrumIndex];
+    auto processorOutput = outputRingBuffer.getWritePointer();
+    auto& spectrum = processorOutput->spectrum;
+    auto& averageSpectrum = processorOutput->energySpectrum;
 
     //
     // Read enough samples from the ring to run the FFT
@@ -113,7 +103,7 @@ void Direct2DDemoProcessor::processFFT()
     // only partially advance the read count for the ring so the next FFT overlaps
     //
     fftWorkBuffer.clear();
-    ringBuffer.read(fftWorkBuffer, fft.getSize(), fftOverlap);
+    inputRingBuffer.read(fftWorkBuffer, fft.getSize(), fftOverlap);
 
     //
     // Run the FFT for each channel
@@ -140,31 +130,22 @@ void Direct2DDemoProcessor::processFFT()
     // Spectrum averaging
     //
     float newScale = 1.0f - energyWeight;
-    for (int channel = 0; channel < accumulatorBuffer.getNumChannels(); ++channel)
+    for (int channel = 0; channel < averagingSpectrum.getNumChannels(); ++channel)
     {
-        for (int bin = 0; bin < accumulatorBuffer.getNumBins(); ++bin)
+        for (int bin = 0; bin < averagingSpectrum.getNumBins(); ++bin)
         {
-            auto accumulator = accumulatorBuffer.getBinMagnitude(channel, bin);
+            auto accumulator = averagingSpectrum.getBinMagnitude(channel, bin);
             accumulator = accumulator * energyWeight + spectrum.getBinMagnitude(channel, bin) * newScale;
-            accumulatorBuffer.setBinValue(channel, bin, accumulator);
+            averagingSpectrum.setBinValue(channel, bin, accumulator);
         }
     }
 
-    averageSpectrum.copyFrom(accumulatorBuffer);
+    averageSpectrum.copyFrom(averagingSpectrum);
 
-    ++spectrumCount;
-}
-
-RealSpectrum<float> const& Direct2DDemoProcessor::getSpectrum() const
-{
-    int spectrumIndex = spectrumCount.get() & 1;
-    return spectra[spectrumIndex];
-}
-
-RealSpectrum<float> const& Direct2DDemoProcessor::getEnergySpectrum() const
-{
-    int spectrumIndex = spectrumCount.get() & 1;
-    return energySpectra[spectrumIndex];
+    //
+    // Bump the ring buffer
+    //
+    outputRingBuffer.advanceWritePosition();
 }
 
 juce::AudioProcessorEditor* Direct2DDemoProcessor::createEditor()
