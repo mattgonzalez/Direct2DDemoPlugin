@@ -15,15 +15,18 @@ void ThreadMessageQueue::postMessage(ThreadMessage::Callback callback_)
 
 void ThreadMessageQueue::dispatchNextMessage()
 {
-    juce::ScopedLock scopedLock(lock);
+    juce::ScopedTryLock tryLocker{ lock };
 
-    if (auto message = messages.getFirst())
+    if (tryLocker.isLocked())
     {
-        if (message->callback)
+        if (auto message = messages.getFirst())
         {
-            message->callback();
-        }
+            if (message->callback)
+            {
+                message->callback();
+            }
 
-        messages.remove(0);
+            messages.remove(0);
+        }
     }
 }
