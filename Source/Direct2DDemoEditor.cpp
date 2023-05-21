@@ -223,6 +223,7 @@ void Direct2DDemoEditor::resized()
 void Direct2DDemoEditor::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
 {
     DBG(treeWhosePropertyHasChanged.getType().toString() << "[" << treeWhosePropertyHasChanged[property].toString() << "]");
+    ignoreUnused(property);
 
     auto const parameterID = treeWhosePropertyHasChanged["id"].toString();
 

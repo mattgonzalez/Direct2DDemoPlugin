@@ -61,7 +61,7 @@ public:
     int fftOverlap = 0;
     double fftHertzPerBin = 0.0;
     juce::WaitableEvent readyEvent;
-    RingBuffer ringBuffer;
+    AudioRingBuffer ringBuffer;
 
     struct Parameters
     {
