@@ -4,10 +4,15 @@
               useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1"
               pluginVST3Category="Analyzer" companyWebsite="echotm.com" bundleIdentifier="com.echotm.Direct2DDemoPlugin"
               pluginManufacturer="Echo Test + Measurement" aaxIdentifier="com.echotm.Direct2DDemoPlugin"
-              pluginFormats="buildStandalone,buildVST3" defines="RUN_UNIT_TESTS=1"
+              pluginFormats="buildStandalone,buildVST3" defines="RUN_UNIT_TESTS=0"
               cppLanguageStandard="latest">
   <MAINGROUP id="j43yYM" name="Direct2D Demo Plugin">
     <GROUP id="{AF67DE6E-462D-758A-F6BA-2BD11FE946BA}" name="Source">
+      <GROUP id="{DC0D0BED-A621-9297-7BCD-8DEAB52FB73B}" name="Source"/>
+      <FILE id="rYar4E" name="AudioRingBuffer.cpp" compile="1" resource="0"
+            file="Source/AudioRingBuffer.cpp"/>
+      <FILE id="DWDeBD" name="AudioRingBuffer.h" compile="0" resource="0"
+            file="Source/AudioRingBuffer.h"/>
       <FILE id="izTnvr" name="d2d.png" compile="0" resource="1" file="Source/d2d.png"/>
       <FILE id="gH8DlC" name="Direct2DAttachment.cpp" compile="1" resource="0"
             file="Source/Direct2DAttachment.cpp"/>
@@ -21,8 +26,10 @@
             file="Source/Direct2DDemoProcessor.cpp"/>
       <FILE id="e6nLPo" name="Direct2DDemoProcessor.h" compile="0" resource="0"
             file="Source/Direct2DDemoProcessor.h"/>
-      <FILE id="e6VdkY" name="RingBuffer.cpp" compile="1" resource="0" file="Source/RingBuffer.cpp"/>
-      <FILE id="WpRvYD" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
+      <FILE id="e6VdkY" name="RingBufferController.cpp" compile="1" resource="0"
+            file="Source/RingBufferController.cpp"/>
+      <FILE id="WpRvYD" name="RingBufferController.h" compile="0" resource="0"
+            file="Source/RingBufferController.h"/>
       <FILE id="O4CABj" name="SettingsComponent.cpp" compile="1" resource="0"
             file="Source/SettingsComponent.cpp"/>
       <FILE id="jYMbAa" name="SettingsComponent.h" compile="0" resource="0"

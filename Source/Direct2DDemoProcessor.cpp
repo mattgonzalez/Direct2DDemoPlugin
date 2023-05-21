@@ -30,13 +30,12 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
 #endif
 }
 
-void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int samplesPerBlock)
+void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int /*samplesPerBlock*/)
 {
     sampleRate = sampleRate_;
     fftHertzPerBin = sampleRate_ / fft.getSize();
 
-    double bufferLengthSeconds = 4.0;
-    ringBuffer.setSize(2, juce::roundToInt(bufferLengthSeconds * sampleRate_) + samplesPerBlock);
+    ringBuffer.setSize(2, fft.getSize() * 4);
     ringBuffer.reset(0);
 
     auto spectraPerSecond = sampleRate_ / (double)fftOverlap;
@@ -58,7 +57,6 @@ void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int samplesPerBloc
         spectrumBuffer = RealSpectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
         spectrumBuffer.clear();
     }
-    spectrumFillCount = 0;
 }
 
 void Direct2DDemoProcessor::releaseResources()

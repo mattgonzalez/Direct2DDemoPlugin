@@ -1,7 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "RingBuffer.h"
+#include "AudioRingBuffer.h"
 #include "Spectrum.h"
 
 enum RenderMode
@@ -75,7 +75,6 @@ private:
     RealSpectrum<float> spectra[2];
     RealSpectrum<float> energySpectra[2];
     juce::Atomic<int> spectrumCount;
-    int spectrumFillCount = 0;
     juce::dsp::FFT fft;
     float fftNormalizationScale = 1.0f;
     juce::dsp::WindowingFunction<float> fftWindow;

@@ -4,7 +4,7 @@
 
 #if RUN_UNIT_TESTS
 
-#include "RingBuffer.h"
+#include "AudioRingBuffer.h"
 #include "Spectrum.h"
 
 struct UnitTests
