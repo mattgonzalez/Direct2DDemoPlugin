@@ -19,13 +19,6 @@ public:
     void paintTimerCallback();
 
     void paint(juce::Graphics&) override;
-    void paintModeText(juce::Graphics& g);
-    void paintPaintStats(juce::Graphics& g,
-        juce::Rectangle<int>& r,
-        juce::StatisticsAccumulator<double> const& frameIntervalSeconds,
-        juce::StatisticsAccumulator<double> const& frameDurationSeconds,
-        int wmPaintCount);
-    void paintStats(juce::Graphics& g);
 
     void resized() override;
     void valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
@@ -46,6 +39,12 @@ private:
 
     void updateFrameRate();
     void updateRenderer();
+
+    void paintModeText(juce::Graphics& g);
+    void paintFrameIntervalStats(juce::Graphics& g, juce::Rectangle<int>& r, juce::StatisticsAccumulator<double> const& frameIntervalSeconds);
+    void paintFrameDurationStats(juce::Graphics& g, juce::Rectangle<int>& r, juce::StatisticsAccumulator<double> const& frameDurationSeconds);
+    void paintWmPaintCount(juce::Graphics& g, juce::Rectangle<int>& r, int wmPaintCount);
+    void paintStats(juce::Graphics& g);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Direct2DDemoEditor)
 };

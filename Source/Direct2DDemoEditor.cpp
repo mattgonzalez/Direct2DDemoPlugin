@@ -80,14 +80,14 @@ void Direct2DDemoEditor::paintModeText(juce::Graphics& g)
     juce::String text;
     switch (audioProcessor.parameters.renderer)
     {
-        case RenderMode::software:
-            text = "Software renderer ";
-            break;
+    case RenderMode::software:
+        text = "Software renderer ";
+        break;
 
-        case RenderMode::vblankAttachmentDirect2D:
-        case RenderMode::dedicatedThreadDirect2D:
-            text = "Direct2D ";
-            break;
+    case RenderMode::vblankAttachmentDirect2D:
+    case RenderMode::dedicatedThreadDirect2D:
+        text = "Direct2D ";
+        break;
     }
 
     text << getWidth() << "x" << getHeight();
@@ -117,11 +117,7 @@ static void paintStat(juce::Graphics& g, juce::Rectangle<int> const r, juce::Str
     g.drawText(name, r, juce::Justification::centredLeft);
 }
 
-void Direct2DDemoEditor::paintPaintStats(juce::Graphics& g,
-    juce::Rectangle<int>& r,
-    juce::StatisticsAccumulator<double> const& frameIntervalSeconds,
-    juce::StatisticsAccumulator<double> const& frameDurationSeconds, 
-    int wmPaintCount)
+void Direct2DDemoEditor::paintFrameIntervalStats(juce::Graphics& g, juce::Rectangle<int>& r, juce::StatisticsAccumulator<double> const& frameIntervalSeconds)
 {
     juce::Colour averageFrameIntervalColor = juce::Colours::white;
     auto averageFrameIntervalSeconds = frameIntervalSeconds.getAverage();
@@ -160,34 +156,38 @@ void Direct2DDemoEditor::paintPaintStats(juce::Graphics& g,
         paintStat(g, r, "Paint interval (ms): ", averageFrameIntervalSeconds, averageFrameIntervalColor, standardDeviation, standardDeviationColor);
         r.translate(0, r.getHeight());
     }
+}
 
+void Direct2DDemoEditor::paintFrameDurationStats(juce::Graphics& g, juce::Rectangle<int>& r, juce::StatisticsAccumulator<double> const& frameDurationSeconds)
+{
+    juce::Colour averageDurationColor = juce::Colours::white;
+    auto averageDurationSeconds = frameDurationSeconds.getAverage();
+    if (averageDurationSeconds > timingSource.nominalFrameIntervalSeconds)
     {
-        juce::Colour averageDurationColor = juce::Colours::white;
-        auto averageDurationSeconds = frameDurationSeconds.getAverage();
-        if (averageDurationSeconds > averageFrameIntervalSeconds * 1.0)
-        {
-            averageDurationColor = juce::Colours::red;
-        }
-        else if (averageDurationSeconds > averageFrameIntervalSeconds * 0.8)
-        {
-            averageFrameIntervalColor = juce::Colours::yellow;
-        }
-
-        juce::Colour standardDeviationColor = juce::Colours::white;
-        auto standardDeviationSeconds = frameDurationSeconds.getStandardDeviation();
-        if (standardDeviationSeconds > timingSource.nominalFrameIntervalSeconds)
-        {
-            standardDeviationColor = juce::Colours::red;
-        }
-        else if (standardDeviationSeconds > timingSource.nominalFrameIntervalSeconds * 0.5)
-        {
-            standardDeviationColor = juce::Colours::yellow;
-        }
-
-        paintStat(g, r, "Paint duration (ms): ", averageDurationSeconds, averageDurationColor, standardDeviationSeconds, standardDeviationColor);
-        r.translate(0, r.getHeight());
+        averageDurationColor = juce::Colours::red;
+    }
+    else if (averageDurationSeconds > timingSource.nominalFrameIntervalSeconds * 0.8)
+    {
+        averageDurationColor = juce::Colours::yellow;
     }
 
+    juce::Colour standardDeviationColor = juce::Colours::white;
+    auto standardDeviationSeconds = frameDurationSeconds.getStandardDeviation();
+    if (standardDeviationSeconds > timingSource.nominalFrameIntervalSeconds)
+    {
+        standardDeviationColor = juce::Colours::red;
+    }
+    else if (standardDeviationSeconds > timingSource.nominalFrameIntervalSeconds * 0.5)
+    {
+        standardDeviationColor = juce::Colours::yellow;
+    }
+
+    paintStat(g, r, "Paint duration (ms): ", averageDurationSeconds, averageDurationColor, standardDeviationSeconds, standardDeviationColor);
+    r.translate(0, r.getHeight());
+}
+
+void Direct2DDemoEditor::paintWmPaintCount(juce::Graphics& g, juce::Rectangle<int>& r, int wmPaintCount)
+{
     g.setColour(juce::Colours::white);
     g.drawText("# WM_PAINT: " + juce::String{ wmPaintCount }, r, juce::Justification::centredLeft);
     r.translate(0, r.getHeight());
@@ -208,13 +208,17 @@ void Direct2DDemoEditor::paintStats(juce::Graphics& g)
     case RenderMode::software:
         if (auto peer = getPeer())
         {
-            paintPaintStats(g, r, peer->measuredPaintIntervalSeconds, peer->measuredPaintDurationSeconds, peer->paintCount);
+            paintFrameIntervalStats(g, r, peer->measuredPaintIntervalSeconds);
+            paintFrameDurationStats(g, r, peer->measuredPaintDurationSeconds);
+            paintWmPaintCount(g, r, peer->paintCount);
         }
         break;
 
     case RenderMode::vblankAttachmentDirect2D:
     case RenderMode::dedicatedThreadDirect2D:
-        paintPaintStats(g, r, d2dAttachment.measuredFrameIntervalSeconds, d2dAttachment.measuredFrameDurationSeconds, d2dAttachment.wmPaintCount);
+        paintFrameIntervalStats(g, r, d2dAttachment.measuredFrameIntervalSeconds);
+        paintFrameDurationStats(g, r, d2dAttachment.measuredFrameDurationSeconds);
+        paintWmPaintCount(g, r, d2dAttachment.wmPaintCount);
         break;
     }
 }
