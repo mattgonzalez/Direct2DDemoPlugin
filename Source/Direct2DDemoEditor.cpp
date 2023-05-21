@@ -63,19 +63,19 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
 
     painter->paint(g, getLocalBounds());
 
-    paintWatermark(g);
+    paintModeText(g);
     paintStats(g);
 }
 
-void Direct2DDemoEditor::paintWatermark(juce::Graphics& g)
+void Direct2DDemoEditor::paintModeText(juce::Graphics& g)
 {
-    g.setFont({ 24.0f });
+    g.setFont({ 20.0f });
     g.setColour(juce::Colours::white);
     juce::String text;
     switch (audioProcessor.parameters.renderer)
     {
         case RenderMode::software:
-            text = "Software render ";
+            text = "Software renderer ";
             break;
 
         case RenderMode::vblankAttachmentDirect2D:
@@ -112,9 +112,10 @@ static void paintStat(juce::Graphics& g, juce::Rectangle<int> const r, juce::Str
 }
 
 void Direct2DDemoEditor::paintPaintStats(juce::Graphics& g,
-    juce::Rectangle<int> r,
+    juce::Rectangle<int>& r,
     juce::StatisticsAccumulator<double> const& frameIntervalSeconds,
-    juce::StatisticsAccumulator<double> const& frameDurationSeconds)
+    juce::StatisticsAccumulator<double> const& frameDurationSeconds, 
+    int wmPaintCount)
 {
     juce::Colour averageFrameIntervalColor = juce::Colours::white;
     auto averageFrameIntervalSeconds = frameIntervalSeconds.getAverage();
@@ -135,7 +136,7 @@ void Direct2DDemoEditor::paintPaintStats(juce::Graphics& g,
             g.setColour(averageFrameIntervalColor);
             g.drawText(juce::String{ 1.0 / averageFrameInterval, 1 }, r.translated(50, 0), juce::Justification::centredLeft);
         }
-        r.translate(0, 25);
+        r.translate(0, r.getHeight());
     }
 
     {
@@ -151,7 +152,7 @@ void Direct2DDemoEditor::paintPaintStats(juce::Graphics& g,
         }
 
         paintStat(g, r, "Paint interval (ms): ", averageFrameIntervalSeconds, averageFrameIntervalColor, standardDeviation, standardDeviationColor);
-        r.translate(0, 25);
+        r.translate(0, r.getHeight());
     }
 
     {
@@ -178,36 +179,36 @@ void Direct2DDemoEditor::paintPaintStats(juce::Graphics& g,
         }
 
         paintStat(g, r, "Paint duration (ms): ", averageDurationSeconds, averageDurationColor, Seconds, standardDeviationColor);
+        r.translate(0, r.getHeight());
     }
+
+    g.setColour(juce::Colours::white);
+    g.drawText("# WM_PAINT: " + juce::String{ wmPaintCount }, r, juce::Justification::centredLeft);
+    r.translate(0, r.getHeight());
 }
 
 void Direct2DDemoEditor::paintStats(juce::Graphics& g)
 {
-    g.setFont({ 20.0f });
+    g.setFont({ 18.0f });
     g.setColour(juce::Colours::white);
 
     juce::Rectangle<int> r{ 0, getHeight() - 125, getWidth(), 25 };
 
-    if (d2dAttachment.isAttached())
-    {
-        g.drawText("# WM_PAINT: " + juce::String{ d2dAttachment.wmPaintCount }, r, juce::Justification::centredLeft, false);
-    }
-    r.translate(0, 25);
     paintStat(g, r, "Timer interval (ms): ", timingSource.measuredTimerIntervalSeconds);
-    r.translate(0, 25);
+    r.translate(0, r.getHeight());
 
     switch (audioProcessor.parameters.renderer)
     {
     case RenderMode::software:
         if (auto peer = getPeer())
         {
-            paintPaintStats(g, r, peer->measuredPaintIntervalSeconds, peer->measuredPaintDurationSeconds);
+            paintPaintStats(g, r, peer->measuredPaintIntervalSeconds, peer->measuredPaintDurationSeconds, peer->paintCount);
         }
         break;
 
     case RenderMode::vblankAttachmentDirect2D:
     case RenderMode::dedicatedThreadDirect2D:
-        paintPaintStats(g, r, d2dAttachment.measuredFrameIntervalSeconds, d2dAttachment.measuredFrameDurationSeconds);
+        paintPaintStats(g, r, d2dAttachment.measuredFrameIntervalSeconds, d2dAttachment.measuredFrameDurationSeconds, d2dAttachment.wmPaintCount);
         break;
     }
 }
