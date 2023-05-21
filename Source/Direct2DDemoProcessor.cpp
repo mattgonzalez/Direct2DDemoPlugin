@@ -9,7 +9,7 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
     state(*this, nullptr, "Direct2DDemoPlugin", 
         { 
             std::make_unique<juce::AudioParameterFloat>(juce::ParameterID { frameRateID, 1 }, "Frame rate", 
-                juce::NormalisableRange{ 1.0f, 200.0f }, 
+                juce::NormalisableRange{ 10.0f, 200.0f }, 
                 60.0f),
             std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{ rendererID, 1 }, "Render mode",
                 juce::StringArray{ "Software renderer", "Direct2D from VBlankAttachment callback", "Direct2D from dedicated thread" },

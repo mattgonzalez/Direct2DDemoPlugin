@@ -10,7 +10,8 @@ SettingsComponent::SettingsComponent(Direct2DDemoProcessor& processor_) :
 
     juce::Array<juce::PropertyComponent*> propertyComponents;
     {
-        auto c = std::make_unique<juce::SliderPropertyComponent>(parameters.frameRate.getPropertyAsValue(), "Frame rate", 1.0, 200.0, 0.1);
+        auto range = processor_.state.getParameterRange(processor_.frameRateID).getRange();
+        auto c = std::make_unique<juce::SliderPropertyComponent>(parameters.frameRate.getPropertyAsValue(), "Frame rate", range.getStart(), range.getEnd(), 0.1);
         propertyComponents.add(c.release());
     }
 
