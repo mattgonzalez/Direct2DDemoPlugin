@@ -57,7 +57,7 @@ public:
     juce::AudioProcessorValueTreeState state;
     double sampleRate = 48000.0;
     int const fftOrder = 10;
-    int fftOverlap = 0;
+    int fftOverlapSkipSamples = 0;
     double fftHertzPerBin = 0.0;
     juce::WaitableEvent readyEvent;
     AudioRingBuffer inputRingBuffer;
@@ -78,6 +78,7 @@ private:
     juce::AudioBuffer<float> fftWorkBuffer;
     RealSpectrum<float> averagingSpectrum;
     float energyWeight = 1.0f;
+    float const fftOverlapPercent = 75.0f;
 
     void processFFT();
 

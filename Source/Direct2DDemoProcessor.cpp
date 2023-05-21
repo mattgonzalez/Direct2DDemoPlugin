@@ -20,7 +20,6 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
     fftWindow(fft.getSize(), juce::dsp::WindowingFunction<float>::blackmanHarris, true),
     fftWorkBuffer(2, fft.getSize() * 2)
 {
-    fftOverlap = fft.getSize() / 4;
     fftNormalizationScale = 2.0f / (float)fft.getSize();
 
 #if RUN_UNIT_TESTS
@@ -41,7 +40,8 @@ void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int /*samplesPerBl
     outputRingBuffer.setSize(2 /* numItems */, 2 /* numChannels */, fft.getSize());
     outputRingBuffer.reset();
 
-    auto spectraPerSecond = (float)sampleRate_ / fftOverlap;
+    fftOverlapSkipSamples = fft.getSize() - juce::roundToInt(fftOverlapPercent * 0.01f * fft.getSize());
+    auto spectraPerSecond = (float)sampleRate_ / (float)fftOverlapSkipSamples;
     float constexpr energyAveragingSeconds = 0.1f;
     energyWeight = 1.0f - 1.0f / (spectraPerSecond * energyAveragingSeconds);
 
@@ -82,15 +82,6 @@ void Direct2DDemoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     readyEvent.signal();
 }
 
-void printBuffer(juce::AudioBuffer<float>& buffer)
-{
-    for (int i = 0; i < buffer.getNumSamples(); i++)
-    {
-        auto text = juce::String::formatted("%04d  % 8f", i, buffer.getSample(0, i));
-        DBG(text);
-    }
-}
-
 void Direct2DDemoProcessor::processFFT()
 {
     auto processorOutput = outputRingBuffer.getWritePointer();
@@ -103,7 +94,7 @@ void Direct2DDemoProcessor::processFFT()
     // only partially advance the read count for the ring so the next FFT overlaps
     //
     fftWorkBuffer.clear();
-    inputRingBuffer.read(fftWorkBuffer, fft.getSize(), fftOverlap);
+    inputRingBuffer.read(fftWorkBuffer, fft.getSize(), fftOverlapSkipSamples);
 
     //
     // Run the FFT for each channel
