@@ -212,10 +212,10 @@ void Direct2DDemoEditor::paintWmPaintCount(juce::Graphics& g, juce::Rectangle<in
 void Direct2DDemoEditor::paintStats(juce::Graphics& g)
 {
 #if JUCE_DIRECT2D
-    g.setFont(18.0f);
+    g.setFont(15.0f);
     g.setColour(juce::Colours::white);
 
-    juce::Rectangle<int> r{ 0, getHeight() - 125, getWidth(), 25 };
+    juce::Rectangle<int> r{ 0, getHeight() - 100, getWidth(), 20 };
 
     paintStat(g, r, "Timer interval (ms): ", timingSource.measuredTimerIntervalSeconds);
     r.translate(0, r.getHeight());
