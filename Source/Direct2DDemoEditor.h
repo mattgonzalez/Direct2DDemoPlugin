@@ -54,7 +54,6 @@ private:
     ThreadMessageQueue threadMessages;
     TimingSource timingSource;
     SettingsComponent settingsComponent;
-    RealSpectrum<float> energyPaintSpectrum;
     std::unique_ptr<SpectrumRingDisplay> painter;
 
     void updateFrameRate();

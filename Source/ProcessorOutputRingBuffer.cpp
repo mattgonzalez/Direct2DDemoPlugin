@@ -36,7 +36,7 @@ void ProcessorOutputRingBuffer::setSize(int numItems, int numChannels, int fftSi
     for (auto entry : array)
     {
         entry->spectrum = RealSpectrum<float>{}.withChannels(numChannels).withFFTSize(fftSize);
-        entry->energySpectrum = RealSpectrum<float>{}.withChannels(numChannels).withFFTSize(fftSize);
+        entry->averageSpectrum = RealSpectrum<float>{}.withChannels(numChannels).withFFTSize(fftSize);
     }
 }
 
@@ -46,7 +46,7 @@ void ProcessorOutputRingBuffer::reset()
     for (auto entry: array)
     {
         entry->spectrum.clear();
-        entry->energySpectrum.clear();
+        entry->averageSpectrum.clear();
     }
 }
 

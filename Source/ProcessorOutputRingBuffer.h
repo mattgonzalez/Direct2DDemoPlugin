@@ -30,7 +30,7 @@ SOFTWARE.
 struct ProcessorOutput
 {
     RealSpectrum<float> spectrum;
-    RealSpectrum<float> energySpectrum;
+    RealSpectrum<float> averageSpectrum;
 };
 
 class ProcessorOutputRingBuffer

@@ -42,9 +42,7 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
 
     audioProcessor.state.state.addListener(this);
 
-    painter = std::make_unique<SpectrumRingDisplay>(p, d2dAttachment, energyPaintSpectrum);
-    energyPaintSpectrum = RealSpectrum<float>{}.withChannels(2).withFFTSize(p.getFFTLength());
-    energyPaintSpectrum.clear();
+    painter = std::make_unique<SpectrumRingDisplay>(p, d2dAttachment);
 
     timingSource.onPaintTimer = [this]() { paintTimerCallback(); };
 
@@ -79,14 +77,13 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
 
     if (audioProcessor.outputRingBuffer.getNumItemsStored() > 0)
     {
-        auto processorOutput = audioProcessor.outputRingBuffer.getMostRecent();
-        energyPaintSpectrum.copyFrom(processorOutput->energySpectrum);
+        //energyPaintSpectrum.copyFrom(processorOutput->energySpectrum);
         audioProcessor.outputRingBuffer.advanceReadPosition();
     }
 
     g.fillAll(juce::Colours::black);
 
-    painter->paint(g, getLocalBounds());
+    painter->paint(g, getLocalBounds().toFloat(), audioProcessor.outputRingBuffer.getMostRecent());
 
     paintModeText(g);
     paintStats(g);

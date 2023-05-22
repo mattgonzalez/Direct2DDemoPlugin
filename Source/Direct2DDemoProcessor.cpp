@@ -110,7 +110,7 @@ void Direct2DDemoProcessor::processFFT()
 {
     auto processorOutput = outputRingBuffer.getWritePointer();
     auto& spectrum = processorOutput->spectrum;
-    auto& averageSpectrum = processorOutput->energySpectrum;
+    auto& averageSpectrum = processorOutput->averageSpectrum;
 
     //
     // Read enough samples from the ring to run the FFT

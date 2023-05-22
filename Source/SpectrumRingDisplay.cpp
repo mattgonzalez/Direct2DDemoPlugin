@@ -24,16 +24,20 @@ SOFTWARE.
 
 #include "SpectrumRingDisplay.h"
 
-SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_, RealSpectrum<float> const& energyPaintSpectrum_) :
+SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_) :
     audioProcessor(processor_),
-    direct2DAttachment(direct2DAttachment_),
-    energyPaintSpectrum(energyPaintSpectrum_)
+    direct2DAttachment(direct2DAttachment_)
 {
 }
 
-void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
+void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds, ProcessorOutput const* const processorOutput)
 {
-    int numBins = juce::roundToInt((float)energyPaintSpectrum.getNumBins() * 2000.0f / (float)audioProcessor.getSampleRate());
+    auto const& spectrum = processorOutput->averageSpectrum;
+
+    //
+    // Limit the bin range & skip DC bin
+    //
+    int numBins = juce::roundToInt((float)spectrum.getNumBins() * 2000.0f / (float)audioProcessor.getSampleRate()) - 1;
 
     //
     // Calculate bass energy
@@ -41,7 +45,7 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
     int numEnergyBins = 0;
     int firstEnergyBin = 0;
     float peakBassEnergy = 0.0f;
-    for (int channel = 0; channel < energyPaintSpectrum.getNumChannels(); ++channel)
+    for (int channel = 0; channel < spectrum.getNumChannels(); ++channel)
     {
         float frequency = 50.0f;
         int bin = (int)std::floor(frequency / audioProcessor.fftHertzPerBin);
@@ -49,7 +53,7 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
         numEnergyBins = 0;
         while (frequency <= 200.0f)
         {
-            auto energy = energyPaintSpectrum.getBinMagnitude(channel, bin);
+            auto energy = spectrum.getBinMagnitude(channel, bin);
             if (energy > peakBassEnergy)
             {
                 peakBassEnergy = energy;
@@ -59,21 +63,66 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
             numEnergyBins++;
         }
     }
-    
+
     //
     // Make ring segments if necessary
     //
     int numRings = numBins;
-    float maxRadius = juce::jmin(bounds.getWidth(), bounds.getHeight()) * 0.35f;
-    auto center = bounds.getCentre().toFloat();
-    auto logNumRings = std::log((float)numRings);
-    auto pixelsPerRing = maxRadius / numRings;
-    auto pixelsPerLogRing = maxRadius / logNumRings;
-    float segmentAngleSpacingRadians = 0.75f * juce::MathConstants<float>::pi / 32.0f;
-    float segmentFilledAngleRadians = segmentAngleSpacingRadians * 0.8f;
+    makeSegmentPaths(numRings, bounds);
 
+    if (ringBounds.isEmpty())
+    {
+        return;
+    }
+
+    //
+    // Paint ring segments
+    //
+    float xScale = 1.0f, yScale = 1.0f;
+    if (peakBassEnergy > 0.3f)
+    {
+        float bump = 0.5f * peakBassEnergy;
+        xScale += bump;
+        yScale += bump;
+    }
+
+    auto aspectRatioWidthOverHeight = ringBounds.getAspectRatio();
+    if (aspectRatioWidthOverHeight > 1.0f)
+    {
+        xScale *= aspectRatioWidthOverHeight;
+    }
+    else
+    {
+        yScale /= aspectRatioWidthOverHeight;
+    }
+
+    gradient = juce::ColourGradient{ juce::Colour{ 0xff6eecfc }, bounds.getCentre(), juce::Colours::hotpink, bounds.getTopLeft(), true };
+    auto const translateAndScale = juce::AffineTransform::scale(xScale, yScale).translated(bounds.getCentre());
+    for (int channel = 0; channel < spectrum.getNumChannels(); ++channel)
+    {
+        for (int ring = 0; ring < numRings; ++ring)
+        {
+            float magnitude = spectrum.getBinMagnitude(channel, ring + 1); // ring + 1 to skip DC bin
+            magnitude = juce::jmin(1.0f, magnitude);
+
+            g.setColour(gradient.getColourAtPosition(magnitude));
+
+            float gain = 1.0f;
+            paintSegments(g, channel, ring, magnitude * gain, translateAndScale);
+        }
+    }
+}
+
+void SpectrumRingDisplay::makeSegmentPaths(int numRings, juce::Rectangle<float> bounds)
+{
     if (segmentPaths.size() != numRings || ringBounds != bounds)
     {
+        float maxRadius = juce::jmin(bounds.getWidth(), bounds.getHeight()) * 0.35f;
+        auto center = bounds.getCentre().toFloat();
+        auto logNumRings = std::log((float)numRings);
+        auto pixelsPerRing = maxRadius / numRings;
+        auto pixelsPerLogRing = maxRadius / logNumRings;
+
         segmentPaths.clear();
         ringBounds = bounds;
 
@@ -103,68 +152,24 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<int> bounds)
 
             radius -= pixelsPerRing;
         }
-
-        gradient = juce::ColourGradient{ juce::Colour{ 0xff6eecfc }, center, juce::Colours::hotpink, { 0.0f, 0.0f }, true };
     }
+}
 
-    if (ringBounds.isEmpty())
+void SpectrumRingDisplay::paintSegments(juce::Graphics& g, int channel, int ring, float magnitude, auto const& translateAndScale)
+{
+    int numSegments = (int)std::floor(juce::MathConstants<float>::halfPi * segmentAngleSpacingInverse * magnitude);
+    numSegments = juce::jmin(numSegments, segmentsPerQuarterCircle);
+
+    float upperAngle = -juce::MathConstants<float>::halfPi + juce::MathConstants<float>::pi * channel;
+    float lowerAngle = upperAngle - segmentAngleSpacingRadians;
+
+    auto const segmentPath = segmentPaths[ring];
+    for (int i = 0; i < numSegments; ++i)
     {
-        return;
-    }
+        g.fillPath(*segmentPath, juce::AffineTransform::rotation(upperAngle).followedBy(translateAndScale));
+        g.fillPath(*segmentPath, juce::AffineTransform::rotation(lowerAngle).followedBy(translateAndScale));
 
-    //
-    // Paint ring segments
-    //
-    float segmentAngleSpacingInverse = 1.0f / segmentAngleSpacingRadians;
-    float xScale = 1.0f, yScale = 1.0f;
-    if (peakBassEnergy > 0.3f)
-    {
-        float bump = 0.5f * peakBassEnergy;
-        xScale += bump;
-        yScale += bump;
-    }
-
-    auto aspectRatioWidthOverHeight = ringBounds.getAspectRatio();
-    if (aspectRatioWidthOverHeight > 1.0f)
-    {
-        xScale *= aspectRatioWidthOverHeight;
-    }
-    else
-    {
-        yScale /= aspectRatioWidthOverHeight;
-    }
-
-    for (int channel = 0; channel < energyPaintSpectrum.getNumChannels(); ++channel)
-    {
-        for (int ring = 0; ring < numRings; ++ring)
-        {
-            float upperAngle = -juce::MathConstants<float>::halfPi + juce::MathConstants<float>::pi * channel;
-            float lowerAngle = upperAngle - segmentAngleSpacingRadians;
-
-            float energyLinear = energyPaintSpectrum.getBinMagnitude(channel, ring);
-            energyLinear = juce::jmin(1.0f, energyLinear);
-            int numSegments = (int)std::floor(juce::MathConstants<float>::halfPi * segmentAngleSpacingInverse * energyLinear);
-
-            g.setColour(gradient.getColourAtPosition(energyLinear).withAlpha(1.0f));
-            auto const segmentPath = segmentPaths[ring];
-            for (int i = 0; i < numSegments; ++i)
-            {
-                {
-                    auto transform = juce::AffineTransform::rotation(upperAngle).
-                        scaled(xScale, yScale).
-                        translated(center);
-                    g.fillPath(*segmentPath, transform);
-                }
-                {
-                    auto transform = juce::AffineTransform::rotation(lowerAngle).
-                        scaled(xScale, yScale).
-                        translated(center);
-                    g.fillPath(*segmentPath, transform);
-                }
-
-                upperAngle += segmentAngleSpacingRadians;
-                lowerAngle -= segmentAngleSpacingRadians;
-            }
-        }
+        upperAngle += segmentAngleSpacingRadians;
+        lowerAngle -= segmentAngleSpacingRadians;
     }
 }
