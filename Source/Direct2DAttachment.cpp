@@ -1,8 +1,8 @@
+#if _WIN32
 #include <windows.h>
 #include <commctrl.h>
+#endif
 #include "Direct2DAttachment.h"
-
-static constexpr int windowSubclassID = 0xd2d12;
 
 Direct2DAttachment::Direct2DAttachment()
 {
@@ -46,6 +46,10 @@ void Direct2DAttachment::detach()
 
     component = nullptr;
 }
+
+#if JUCE_DIRECT2D
+
+static constexpr int windowSubclassID = 0xd2d12;
 
 static LRESULT subclassProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lParam, UINT_PTR /*uIdSubclass*/, DWORD_PTR dwRefData)
 {
@@ -96,9 +100,11 @@ static void paintComponentsRecursive(juce::Graphics& g, juce::Component* compone
         paintComponentsRecursive(g, child, desktopComponent);
     }
 }
+#endif
 
 void Direct2DAttachment::paintImmediately()
 {
+#if JUCE_DIRECT2D
     auto startTime = juce::Time::getHighResolutionTicks();
 
     juce::ScopedTryLock locker{ lock };
@@ -148,10 +154,12 @@ void Direct2DAttachment::paintImmediately()
         }
         lastPaintTicks = startTime;
     }
+#endif
 }
 
 void Direct2DAttachment::handleResize()
 {
+#if JUCE_DIRECT2D
     {
         juce::ScopedLock locker{ lock };
 
@@ -162,6 +170,12 @@ void Direct2DAttachment::handleResize()
     }
 
     paintImmediately();
+#else
+    //
+    // Only works for Direct2D mode
+    //
+    jassertfalse;
+#endif
 }
 
 void Direct2DAttachment::resetStats()
@@ -177,6 +191,7 @@ void Direct2DAttachment::resetStats()
 
 void Direct2DAttachment::createDirect2DContext()
 {
+#if JUCE_DIRECT2D
     jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
 
     if (component)
@@ -203,10 +218,12 @@ void Direct2DAttachment::createDirect2DContext()
             desktopComponentWatcher = std::make_unique<DesktopComponentWatcher>(this, component->getTopLevelComponent());
         }
     }
+#endif
 }
 
 void Direct2DAttachment::removeDirect2DContext()
 {
+#if JUCE_DIRECT2D
     jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
 
     if (direct2DLowLevelGraphicsContext)
@@ -234,6 +251,7 @@ void Direct2DAttachment::removeDirect2DContext()
 
         desktopComponentWatcher = nullptr;
     }
+#endif
 }
 
 Direct2DAttachment::AttachedComponentPeerWatcher::AttachedComponentPeerWatcher(Direct2DAttachment* direct2DAttachment_) :
@@ -244,6 +262,7 @@ Direct2DAttachment::AttachedComponentPeerWatcher::AttachedComponentPeerWatcher(D
 
 void Direct2DAttachment::AttachedComponentPeerWatcher::componentPeerChanged()
 {
+#if JUCE_DIRECT2D
     juce::ScopedLock locker{ direct2DAttachment->lock };
 
     if (auto peer = getComponent()->getPeer())
@@ -259,6 +278,7 @@ void Direct2DAttachment::AttachedComponentPeerWatcher::componentPeerChanged()
     }
 
     direct2DAttachment->detach();
+#endif
 }
 
 Direct2DAttachment::DesktopComponentWatcher::DesktopComponentWatcher(Direct2DAttachment* direct2DAttachment_, juce::Component* desktopComponent_) :
@@ -269,10 +289,12 @@ Direct2DAttachment::DesktopComponentWatcher::DesktopComponentWatcher(Direct2DAtt
 
 void Direct2DAttachment::DesktopComponentWatcher::componentMovedOrResized(bool /*wasMoved*/, bool wasResized)
 {
+#if JUCE_DIRECT2D
     if (wasResized)
     {
         juce::ScopedLock locker{ direct2DAttachment->lock };
 
         direct2DAttachment->handleResize();
     }
+#endif
 }

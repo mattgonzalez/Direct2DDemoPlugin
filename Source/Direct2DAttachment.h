@@ -12,7 +12,11 @@ public:
     void detach();
     bool isAttached() const noexcept
     {
+#if JUCE_DIRECT2D
         return direct2DLowLevelGraphicsContext != nullptr;
+#else
+        return false;
+#endif
     }
 
     void paintImmediately();
@@ -32,7 +36,7 @@ public:
 protected:
     juce::CriticalSection lock;
     juce::Component::SafePointer<juce::Component> component;
-    bool wmPaintEnabled;
+    bool wmPaintEnabled = false;
     
     struct AttachedComponentPeerWatcher : public juce::ComponentMovementWatcher
     {
@@ -60,7 +64,9 @@ protected:
    
     std::unique_ptr<AttachedComponentPeerWatcher> originalComponentWatcher;
     std::unique_ptr<DesktopComponentWatcher> desktopComponentWatcher;
+#if JUCE_DIRECT2D
     std::unique_ptr<juce::Direct2DLowLevelGraphicsContext> direct2DLowLevelGraphicsContext;
+#endif
 
     void createDirect2DContext();
     void removeDirect2DContext();
