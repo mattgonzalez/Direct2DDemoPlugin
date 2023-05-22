@@ -71,6 +71,9 @@ void SettingsComponent::paint(juce::Graphics& g)
     g.setColour(juce::Colour{ 0xff7CDFF7 }.withAlpha(0.8f));
     g.fillRoundedRectangle(getLocalBounds().toFloat(), getHeight() * 0.1f);
 
+    g.setColour(juce::Colours::black);
+    g.drawText("Copyright " + juce::String{ juce::CharPointer_UTF8("\xc2\xa9") } + " 2023 Matthew Gonzalez", getLocalBounds().removeFromTop(25), juce::Justification::centred);
+
     g.setColour(juce::Colours::white);
     if (getBoundsInParent().getX() < getParentComponent()->getWidth() - panel.getX())
     {
@@ -84,7 +87,7 @@ void SettingsComponent::paint(juce::Graphics& g)
 
 void SettingsComponent::resized()
 {
-    panel.setBounds(getLocalBounds().reduced(30).withHeight(panel.getTotalContentHeight()));
+    panel.setBounds(getLocalBounds().reduced(30, 30).withHeight(panel.getTotalContentHeight()));
 }
 
 void SettingsComponent::mouseEnter(const juce::MouseEvent& /*event*/)
