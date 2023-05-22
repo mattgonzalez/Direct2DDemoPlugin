@@ -1,4 +1,3 @@
-#include <windows.h>
 #include "Direct2DDemoProcessor.h"
 #include "Direct2DDemoEditor.h"
 
@@ -75,7 +74,7 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
 
 void Direct2DDemoEditor::paintModeText(juce::Graphics& g)
 {
-    g.setFont({ 20.0f });
+    g.setFont(20.0f);
     g.setColour(juce::Colours::white);
     juce::String text;
     switch (audioProcessor.parameters.renderer)
@@ -195,7 +194,8 @@ void Direct2DDemoEditor::paintWmPaintCount(juce::Graphics& g, juce::Rectangle<in
 
 void Direct2DDemoEditor::paintStats(juce::Graphics& g)
 {
-    g.setFont({ 18.0f });
+#if JUCE_DIRECT2D
+    g.setFont(18.0f);
     g.setColour(juce::Colours::white);
 
     juce::Rectangle<int> r{ 0, getHeight() - 125, getWidth(), 25 };
@@ -221,6 +221,7 @@ void Direct2DDemoEditor::paintStats(juce::Graphics& g)
         paintWmPaintCount(g, r, d2dAttachment.wmPaintCount);
         break;
     }
+#endif
 }
 
 void Direct2DDemoEditor::resized()
@@ -253,6 +254,7 @@ void Direct2DDemoEditor::valueTreePropertyChanged(juce::ValueTree& treeWhoseProp
 
 void Direct2DDemoEditor::resetStats()
 {
+#if JUCE_DIRECT2D
     if (auto peer = getPeer())
     {
         peer->resetStats();
@@ -260,6 +262,7 @@ void Direct2DDemoEditor::resetStats()
 
     timingSource.resetStats();
     d2dAttachment.resetStats();
+#endif
 }
 
 void Direct2DDemoEditor::updateFrameRate()
