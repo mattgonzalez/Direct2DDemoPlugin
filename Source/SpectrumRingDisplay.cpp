@@ -32,12 +32,12 @@ SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Dire
 
 void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds, ProcessorOutput const* const processorOutput)
 {
-    auto const& spectrum = processorOutput->averageSpectrum;
+    auto const& averageSpectrum = processorOutput->averageSpectrum;
 
     //
     // Limit the bin range & skip DC bin
     //
-    int numBins = juce::roundToInt((float)spectrum.getNumBins() * 2000.0f / (float)audioProcessor.getSampleRate()) - 1;
+    int numBins = juce::roundToInt((float)averageSpectrum.getNumBins() * 2000.0f / (float)audioProcessor.getSampleRate()) - 1;
 
     //
     // Calculate bass energy
@@ -45,7 +45,7 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds
     int numEnergyBins = 0;
     int firstEnergyBin = 0;
     float peakBassEnergy = 0.0f;
-    for (int channel = 0; channel < spectrum.getNumChannels(); ++channel)
+    for (int channel = 0; channel < averageSpectrum.getNumChannels(); ++channel)
     {
         float frequency = 50.0f;
         int bin = (int)std::floor(frequency / audioProcessor.fftHertzPerBin);
@@ -53,7 +53,7 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds
         numEnergyBins = 0;
         while (frequency <= 200.0f)
         {
-            auto energy = spectrum.getBinMagnitude(channel, bin);
+            auto energy = averageSpectrum.getBinMagnitude(channel, bin);
             if (energy > peakBassEnergy)
             {
                 peakBassEnergy = energy;
@@ -98,17 +98,19 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds
 
     gradient = juce::ColourGradient{ juce::Colour{ 0xff6eecfc }, bounds.getCentre(), juce::Colours::hotpink, bounds.getTopLeft(), true };
     auto const translateAndScale = juce::AffineTransform::scale(xScale, yScale).translated(bounds.getCentre());
-    for (int channel = 0; channel < spectrum.getNumChannels(); ++channel)
+    juce::NormalisableRange<float> gainRange{ 0.0f, 12.0f };
+    for (int channel = 0; channel < averageSpectrum.getNumChannels(); ++channel)
     {
         for (int ring = 0; ring < numRings; ++ring)
         {
-            float magnitude = spectrum.getBinMagnitude(channel, ring + 1); // ring + 1 to skip DC bin
-            magnitude = juce::jmin(1.0f, magnitude);
-
-            g.setColour(gradient.getColourAtPosition(magnitude));
-
-            float gain = 1.0f;
-            paintSegments(g, channel, ring, magnitude * gain, translateAndScale);
+	        float magnitude = averageSpectrum.getBinMagnitude(channel, ring + 1); // ring + 1 to skip DC bin
+	        magnitude = juce::jmin(1.0f, magnitude);
+	
+	        g.setColour(gradient.getColourAtPosition(magnitude));
+	
+            float gainDecibels = gainRange.convertFrom0to1((float)ring / (float)numRings);
+            float gain = juce::Decibels::decibelsToGain(gainDecibels);
+	        paintSegments(g, channel, ring, magnitude * gain, translateAndScale);
         }
     }
 }

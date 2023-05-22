@@ -45,7 +45,7 @@ protected:
     juce::ColourGradient gradient;
 
     int const segmentsPerQuarterCircle = 32;
-    float const segmentAngleSpacingRadians = 0.8f * juce::MathConstants<float>::halfPi / (float)segmentsPerQuarterCircle;
+    float const segmentAngleSpacingRadians = 0.98f * juce::MathConstants<float>::halfPi / (float)segmentsPerQuarterCircle;
     float const segmentFilledAngleRadians = segmentAngleSpacingRadians * 0.8f;
     float const segmentAngleSpacingInverse = 1.0f / segmentAngleSpacingRadians;
 
