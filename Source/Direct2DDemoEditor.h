@@ -4,7 +4,6 @@
 #include "Direct2DDemoProcessor.h"
 #include "Direct2DAttachment.h"
 #include "SettingsComponent.h"
-#include "ValueTreeDisplay.h"
 #include "TimingSource.h"
 #include "SpectrumRingDisplay.h"
 #include "ThreadMessageQueue.h"
@@ -31,9 +30,6 @@ private:
     ThreadMessageQueue threadMessages;
     TimingSource timingSource;
     SettingsComponent settingsComponent;
-#if JUCE_DEBUG
-    ValueTreeDisplayWindow valueTreeDisplay;
-#endif
     RealSpectrum<float> energyPaintSpectrum;
     std::unique_ptr<SpectrumRingDisplay> painter;
 

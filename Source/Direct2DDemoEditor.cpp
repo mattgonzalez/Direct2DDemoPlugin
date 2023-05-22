@@ -18,10 +18,6 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
 
     audioProcessor.state.state.addListener(this);
 
-#if JUCE_DEBUG
-    valueTreeDisplay.addTree(audioProcessor.state.state);
-#endif
-
     painter = std::make_unique<SpectrumRingDisplay>(p, d2dAttachment, energyPaintSpectrum);
     energyPaintSpectrum = RealSpectrum<float>{}.withChannels(2).withFFTSize(p.getFFTLength());
     energyPaintSpectrum.clear();

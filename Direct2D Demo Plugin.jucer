@@ -51,10 +51,6 @@
             file="Source/TimingSource.cpp"/>
       <FILE id="R06H7o" name="TimingSource.h" compile="0" resource="0" file="Source/TimingSource.h"/>
       <FILE id="cx9nLR" name="UnitTests.h" compile="0" resource="0" file="Source/UnitTests.h"/>
-      <FILE id="wOs7bt" name="ValueTreeDisplay.cpp" compile="1" resource="0"
-            file="Source/ValueTreeDisplay.cpp"/>
-      <FILE id="euSiwp" name="ValueTreeDisplay.h" compile="0" resource="0"
-            file="Source/ValueTreeDisplay.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
