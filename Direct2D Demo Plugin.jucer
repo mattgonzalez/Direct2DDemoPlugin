@@ -9,6 +9,10 @@
   <MAINGROUP id="j43yYM" name="Direct2D Demo Plugin">
     <GROUP id="{AF67DE6E-462D-758A-F6BA-2BD11FE946BA}" name="Source">
       <GROUP id="{0FDA1418-E094-30AF-1993-392C2BC44D86}" name="Editor">
+        <FILE id="AKmqfo" name="AnimationDisplay.cpp" compile="1" resource="0"
+              file="Source/AnimationDisplay.cpp"/>
+        <FILE id="iBqLXd" name="AnimationDisplay.h" compile="0" resource="0"
+              file="Source/AnimationDisplay.h"/>
         <FILE id="izTnvr" name="d2d.png" compile="0" resource="1" file="Source/d2d.png"/>
         <FILE id="gH8DlC" name="Direct2DAttachment.cpp" compile="1" resource="0"
               file="Source/Direct2DAttachment.cpp"/>
@@ -78,10 +82,12 @@
         <MODULEPATH id="juce_gui_basics" path="../../../../JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../../../JUCE/modules"/>
         <MODULEPATH id="juce_dsp" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="friz" path="../animator/Source"/>
       </MODULEPATHS>
     </VS2022>
   </EXPORTFORMATS>
   <MODULES>
+    <MODULE id="friz" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
