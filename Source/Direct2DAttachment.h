@@ -32,7 +32,7 @@ public:
     Direct2DAttachment();
     ~Direct2DAttachment();
 
-    void attach(juce::Component* owner_, bool wmPaintEnabled_);
+    void attach(juce::Component* owner_, bool wmPaintEnabled_ = true);
     void detach();
     bool isAttached() const noexcept
     {

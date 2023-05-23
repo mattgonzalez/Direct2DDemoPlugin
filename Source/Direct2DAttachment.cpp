@@ -211,23 +211,42 @@ void Direct2DAttachment::createDirect2DContext()
     {
         if (auto peer = component->getPeer())
         {
+            //
+            // Make sure the window is in software mode; otherise the peer will have its own Direct2D context
+            // which will conflict with the one about to be created
+            //
             peer->setCurrentRenderingEngine(0);
 
+            //
+            // Make a Direct2DLowLevelGraphicsContext
+            //
             auto hwnd = (HWND)peer->getNativeHandle();
             direct2DLowLevelGraphicsContext = nullptr;
             direct2DLowLevelGraphicsContext = std::make_unique<juce::Direct2DLowLevelGraphicsContext>(hwnd);
 
+            //
+            // I'd like to turn WM_PAINT off completely, but it still seems to be necessary
+            //
             if (!wmPaintEnabled)
             {
                 SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
             }
 
+            //
+            // Subclass the window to take over painting and sizing for the window
+            //
             auto ok = SetWindowSubclass(hwnd, subclassProc, windowSubclassID, (DWORD_PTR)this);
             jassert(ok);
             juce::ignoreUnused(ok);
 
+            //
+            // Make sure the window is sized properly
+            //
             handleResize();
 
+            //
+            // Need to attach a watcher to the desktop component in case the size is changed internally by JUCE
+            //
             desktopComponentWatcher = std::make_unique<DesktopComponentWatcher>(this, component->getTopLevelComponent());
         }
     }
@@ -278,12 +297,18 @@ void Direct2DAttachment::AttachedComponentPeerWatcher::componentPeerChanged()
 #if JUCE_DIRECT2D
     juce::ScopedLock locker{ direct2DAttachment->lock };
 
+    //
+    // See if the window is on the desktop
+    //
     if (auto peer = getComponent()->getPeer())
     {
         if (auto windowComponent = getComponent()->getTopLevelComponent())
         {
             if (windowComponent->isOnDesktop() && !direct2DAttachment->isAttached())
             {
+                //
+                // The window is on the desktop and has a window handle; OK to create the Direct2D context
+                //
                 direct2DAttachment->createDirect2DContext();
                 return;
             }
@@ -307,6 +332,9 @@ void Direct2DAttachment::DesktopComponentWatcher::componentMovedOrResized(bool /
     {
         juce::ScopedLock locker{ direct2DAttachment->lock };
 
+        //
+        // Need this watcher to listen to window size changes performed internally by the app
+        //
         direct2DAttachment->handleResize();
     }
 #endif
