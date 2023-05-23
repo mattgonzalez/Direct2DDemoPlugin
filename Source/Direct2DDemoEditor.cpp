@@ -60,12 +60,20 @@ Direct2DDemoEditor::~Direct2DDemoEditor()
 
 void Direct2DDemoEditor::paintTimerCallback()
 {
+    //
+    // Just got notified by the timing source that it's time to paint
+    // 
+    // For software mode, just call repaint and then paint on WM_PAINT
+    //
     if (RenderMode::software == audioProcessor.parameters.renderer)
     {
         repaint();
         return;
     }
 
+    //
+    // For Direct2D, go ahead and paint right now
+    //
     d2dAttachment.paintImmediately();
 }
 
@@ -76,14 +84,17 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
         return;
     }
 
-    if (audioProcessor.outputRingBuffer.getNumItemsStored() > 0)
+    //
+    // Throw away excess data from the processor output FIFO
+    //
+    if (audioProcessor.outputFIFO.getNumItemsStored() > 0)
     {
-        audioProcessor.outputRingBuffer.advanceReadPosition();
+        audioProcessor.outputFIFO.advanceReadPosition();
     }
 
     g.fillAll(juce::Colours::black);
 
-    painter->paint(g, getLocalBounds().toFloat(), audioProcessor.outputRingBuffer.getMostRecent());
+    painter->paint(g, getLocalBounds().toFloat(), audioProcessor.outputFIFO.getMostRecent());
 
     paintModeText(g);
     paintStats(g);
@@ -152,7 +163,7 @@ void Direct2DDemoEditor::paintFrameIntervalStats(juce::Graphics& g, juce::Rectan
         if (auto averageFrameInterval = frameIntervalSeconds.getAverage(); averageFrameInterval > 0.0)
         {
             g.setColour(averageFrameIntervalColor);
-            g.drawText(juce::String{ 1.0 / averageFrameInterval, 1 }, r.translated(50, 0), juce::Justification::centredLeft);
+            g.drawText(juce::String{ 1.0 / averageFrameInterval, 1 }, r.translated(30, 0), juce::Justification::centredLeft);
         }
         r.translate(0, r.getHeight());
     }
@@ -284,6 +295,9 @@ void Direct2DDemoEditor::resetStats()
 
 void Direct2DDemoEditor::updateFrameRate()
 {
+    //
+    // Frame rate changed; tell the timing source
+    //
     if (auto framesPerSecond = audioProcessor.parameters.frameRate.get(); framesPerSecond > 0.0)
     {
         threadMessages.postMessage([this, framesPerSecond]()
@@ -296,7 +310,14 @@ void Direct2DDemoEditor::updateFrameRate()
 
 void Direct2DDemoEditor::updateRenderer()
 {
+    //
+    // Renderer change; stop the timing source
+    //
     timingSource.stopAllTimers();
+
+    //
+    // Detach Direct2D
+    //
     d2dAttachment.detach();
 
     resetStats();
@@ -306,13 +327,19 @@ void Direct2DDemoEditor::updateRenderer()
     {
     case RenderMode::software:
     {
+        //
+        // Nothing to do; the window is already in software render mode
+        //
         break;
     }
 
     case RenderMode::vblankAttachmentDirect2D:
     case RenderMode::dedicatedThreadDirect2D:
     {
-        d2dAttachment.attach(this);
+        //
+        // Attach Direct2D
+        //
+        d2dAttachment.attach();
     }
     }
 

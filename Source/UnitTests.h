@@ -28,7 +28,7 @@ SOFTWARE.
 
 #if RUN_UNIT_TESTS
 
-#include "AudioRingBuffer.h"
+#include "AudioFIFO.h"
 #include "Spectrum.h"
 
 struct UnitTests

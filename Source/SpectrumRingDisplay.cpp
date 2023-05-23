@@ -35,7 +35,7 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds
     auto const& averageSpectrum = processorOutput->averageSpectrum;
 
     //
-    // Limit the bin range & skip DC bin
+    // Limit the bin range; skip DC bin
     //
     int numBins = juce::roundToInt((float)averageSpectrum.getNumBins() * 2000.0f / (float)audioProcessor.getSampleRate()) - 1;
 
@@ -76,7 +76,7 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds
     }
 
     //
-    // Paint ring segments
+    // Scale ring segments by the bass energy and the window aspect ratio
     //
     float xScale = 1.0f, yScale = 1.0f;
     if (peakBassEnergy > 0.3f)
@@ -96,6 +96,9 @@ void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds
         yScale /= aspectRatioWidthOverHeight;
     }
 
+    //
+    // Paint the ring segments
+    //
     gradient = juce::ColourGradient{ juce::Colour{ 0xff6eecfc }, bounds.getCentre(), juce::Colours::hotpink, bounds.getTopLeft(), true };
     auto const translateAndScale = juce::AffineTransform::scale(xScale, yScale).translated(bounds.getCentre());
     juce::NormalisableRange<float> gainRange{ 0.0f, 12.0f };

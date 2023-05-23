@@ -10,49 +10,51 @@
               companyEmail="matt@echotm.com">
   <MAINGROUP id="j43yYM" name="Direct2D Demo Plugin">
     <GROUP id="{AF67DE6E-462D-758A-F6BA-2BD11FE946BA}" name="Source">
-      <FILE id="rYar4E" name="AudioRingBuffer.cpp" compile="1" resource="0"
-            file="Source/AudioRingBuffer.cpp"/>
-      <FILE id="DWDeBD" name="AudioRingBuffer.h" compile="0" resource="0"
-            file="Source/AudioRingBuffer.h"/>
-      <FILE id="izTnvr" name="d2d.png" compile="0" resource="1" file="Source/d2d.png"/>
-      <FILE id="gH8DlC" name="Direct2DAttachment.cpp" compile="1" resource="0"
-            file="Source/Direct2DAttachment.cpp"/>
-      <FILE id="H7baNd" name="Direct2DAttachment.h" compile="0" resource="0"
-            file="Source/Direct2DAttachment.h"/>
-      <FILE id="YECgo8" name="Direct2DDemoEditor.cpp" compile="1" resource="0"
-            file="Source/Direct2DDemoEditor.cpp"/>
-      <FILE id="MBXWPh" name="Direct2DDemoEditor.h" compile="0" resource="0"
-            file="Source/Direct2DDemoEditor.h"/>
-      <FILE id="C7vzXb" name="Direct2DDemoProcessor.cpp" compile="1" resource="0"
-            file="Source/Direct2DDemoProcessor.cpp"/>
-      <FILE id="e6nLPo" name="Direct2DDemoProcessor.h" compile="0" resource="0"
-            file="Source/Direct2DDemoProcessor.h"/>
-      <FILE id="PfppBF" name="ProcessorOutputRingBuffer.cpp" compile="1"
-            resource="0" file="Source/ProcessorOutputRingBuffer.cpp"/>
-      <FILE id="NWWYYv" name="ProcessorOutputRingBuffer.h" compile="0" resource="0"
-            file="Source/ProcessorOutputRingBuffer.h"/>
-      <FILE id="e6VdkY" name="RingBufferController.cpp" compile="1" resource="0"
-            file="Source/RingBufferController.cpp"/>
-      <FILE id="WpRvYD" name="RingBufferController.h" compile="0" resource="0"
-            file="Source/RingBufferController.h"/>
-      <FILE id="O4CABj" name="SettingsComponent.cpp" compile="1" resource="0"
-            file="Source/SettingsComponent.cpp"/>
-      <FILE id="jYMbAa" name="SettingsComponent.h" compile="0" resource="0"
-            file="Source/SettingsComponent.h"/>
-      <FILE id="Mqcfjv" name="Spectrum.cpp" compile="1" resource="0" file="Source/Spectrum.cpp"/>
-      <FILE id="eq6dwK" name="Spectrum.h" compile="0" resource="0" file="Source/Spectrum.h"/>
-      <FILE id="qPyAev" name="SpectrumRingDisplay.cpp" compile="1" resource="0"
-            file="Source/SpectrumRingDisplay.cpp"/>
-      <FILE id="FVpAtB" name="SpectrumRingDisplay.h" compile="0" resource="0"
-            file="Source/SpectrumRingDisplay.h"/>
-      <FILE id="kpagmZ" name="ThreadMessageQueue.cpp" compile="1" resource="0"
-            file="Source/ThreadMessageQueue.cpp"/>
-      <FILE id="MYzIdD" name="ThreadMessageQueue.h" compile="0" resource="0"
-            file="Source/ThreadMessageQueue.h"/>
-      <FILE id="ugJn9t" name="TimingSource.cpp" compile="1" resource="0"
-            file="Source/TimingSource.cpp"/>
-      <FILE id="R06H7o" name="TimingSource.h" compile="0" resource="0" file="Source/TimingSource.h"/>
-      <FILE id="cx9nLR" name="UnitTests.h" compile="0" resource="0" file="Source/UnitTests.h"/>
+      <GROUP id="{0FDA1418-E094-30AF-1993-392C2BC44D86}" name="Editor">
+        <FILE id="izTnvr" name="d2d.png" compile="0" resource="1" file="Source/d2d.png"/>
+        <FILE id="gH8DlC" name="Direct2DAttachment.cpp" compile="1" resource="0"
+              file="Source/Direct2DAttachment.cpp"/>
+        <FILE id="H7baNd" name="Direct2DAttachment.h" compile="0" resource="0"
+              file="Source/Direct2DAttachment.h"/>
+        <FILE id="YECgo8" name="Direct2DDemoEditor.cpp" compile="1" resource="0"
+              file="Source/Direct2DDemoEditor.cpp"/>
+        <FILE id="MBXWPh" name="Direct2DDemoEditor.h" compile="0" resource="0"
+              file="Source/Direct2DDemoEditor.h"/>
+        <FILE id="qPyAev" name="SpectrumRingDisplay.cpp" compile="1" resource="0"
+              file="Source/SpectrumRingDisplay.cpp"/>
+        <FILE id="FVpAtB" name="SpectrumRingDisplay.h" compile="0" resource="0"
+              file="Source/SpectrumRingDisplay.h"/>
+        <FILE id="kpagmZ" name="ThreadMessageQueue.cpp" compile="1" resource="0"
+              file="Source/ThreadMessageQueue.cpp"/>
+        <FILE id="MYzIdD" name="ThreadMessageQueue.h" compile="0" resource="0"
+              file="Source/ThreadMessageQueue.h"/>
+        <FILE id="O4CABj" name="SettingsComponent.cpp" compile="1" resource="0"
+              file="Source/SettingsComponent.cpp"/>
+        <FILE id="jYMbAa" name="SettingsComponent.h" compile="0" resource="0"
+              file="Source/SettingsComponent.h"/>
+        <FILE id="ugJn9t" name="TimingSource.cpp" compile="1" resource="0"
+              file="Source/TimingSource.cpp"/>
+        <FILE id="R06H7o" name="TimingSource.h" compile="0" resource="0" file="Source/TimingSource.h"/>
+      </GROUP>
+      <GROUP id="{7F2225AD-8FF7-7B44-0E34-0E9FBC360DF6}" name="Processor">
+        <FILE id="iSNGbD" name="FIFOController.cpp" compile="1" resource="0"
+              file="Source/FIFOController.cpp"/>
+        <FILE id="AkwYtr" name="FIFOController.h" compile="0" resource="0"
+              file="Source/FIFOController.h"/>
+        <FILE id="rYar4E" name="AudioFIFO.cpp" compile="1" resource="0" file="Source/AudioFIFO.cpp"/>
+        <FILE id="DWDeBD" name="AudioFIFO.h" compile="0" resource="0" file="Source/AudioFIFO.h"/>
+        <FILE id="C7vzXb" name="Direct2DDemoProcessor.cpp" compile="1" resource="0"
+              file="Source/Direct2DDemoProcessor.cpp"/>
+        <FILE id="e6nLPo" name="Direct2DDemoProcessor.h" compile="0" resource="0"
+              file="Source/Direct2DDemoProcessor.h"/>
+        <FILE id="PfppBF" name="ProcessorOutputFIFO.cpp" compile="1" resource="0"
+              file="Source/ProcessorOutputFIFO.cpp"/>
+        <FILE id="NWWYYv" name="ProcessorOutputFIFO.h" compile="0" resource="0"
+              file="Source/ProcessorOutputFIFO.h"/>
+        <FILE id="cx9nLR" name="UnitTests.h" compile="0" resource="0" file="Source/UnitTests.h"/>
+        <FILE id="Mqcfjv" name="Spectrum.cpp" compile="1" resource="0" file="Source/Spectrum.cpp"/>
+        <FILE id="eq6dwK" name="Spectrum.h" compile="0" resource="0" file="Source/Spectrum.h"/>
+      </GROUP>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>

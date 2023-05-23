@@ -22,22 +22,22 @@ SOFTWARE.
 
 */
 
-#include "AudioRingBuffer.h"
+#include "AudioFIFO.h"
 
-void AudioRingBuffer::setSize(int numChannels, int numSamples)
+void AudioFIFO::setSize(int numChannels, int numSamples)
 {
     int ringSize = ringController.setRingSize(numSamples);
     buffer.setSize(numChannels, ringSize, false, false, true);
     buffer.clear();
 }
 
-void AudioRingBuffer::reset(int numStoredSamples)
+void AudioFIFO::reset(int numStoredSamples)
 {
     ringController.reset(numStoredSamples);
     buffer.clear();
 }
 
-void AudioRingBuffer::write(juce::AudioBuffer<float> const& source)
+void AudioFIFO::write(juce::AudioBuffer<float> const& source)
 {
     int numChannels = juce::jmin(buffer.getNumChannels(), source.getNumChannels());
     int samplesRemaining = source.getNumSamples();
@@ -59,7 +59,7 @@ void AudioRingBuffer::write(juce::AudioBuffer<float> const& source)
     }
 }
 
-void AudioRingBuffer::read(juce::AudioBuffer<float>& destination, int numSamplesToCopy, int ringAdvanceCount)
+void AudioFIFO::read(juce::AudioBuffer<float>& destination, int numSamplesToCopy, int ringAdvanceCount)
 {
     int numChannels = juce::jmin(buffer.getNumChannels(), destination.getNumChannels());
     int destinationIndex = 0;

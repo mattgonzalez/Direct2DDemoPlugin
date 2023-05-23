@@ -24,28 +24,39 @@ SOFTWARE.
 
 #pragma once
 
-#include "RingBufferController.h"
-#include "Spectrum.h"
+#include <JuceHeader.h>
 
-struct ProcessorOutput
-{
-    RealSpectrum<float> spectrum;
-    RealSpectrum<float> averageSpectrum;
-};
-
-class ProcessorOutputRingBuffer
+class FIFOController
 {
 public:
-    void setSize(int numItems, int numChannels, int fftSize);
-    void reset();
-    ProcessorOutput* const getWritePointer() const;
-    ProcessorOutput const * const getMostRecent() const;
-    void advanceWritePosition();
-    void advanceReadPosition();
+    FIFOController();
 
+    struct Block
+    {
+        int position;
+        int count;
+    };
+
+    int setRingSize(int numItems);
+    int getRingSize() const
+    {
+        return ringSize;
+    }
+    void reset(int numStoredItems);
     int getNumItemsStored() const;
 
+    Block getWriteBlock(int numItemsWanted);
+    Block getReadBlock(int numItemsWanted, int numItemsAlreadyRead);
+
+    int getReadPosition(int offset = 0) const;
+    int getWritePosition(int offset = 0) const;
+    int getSafeTransferCount(int numItemsWanted, int position) const;
+    void advanceReadPosition(int count);
+    void advanceWritePosition(int count);
+    void flush();
+
 private:
-    RingBufferController ringController;
-    juce::OwnedArray<ProcessorOutput> array;
+    int readCount = 0;
+    int writeCount = 0;
+    int ringSize = 0;
 };

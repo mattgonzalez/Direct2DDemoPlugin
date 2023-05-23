@@ -29,7 +29,7 @@ SOFTWARE.
 #include "Direct2DAttachment.h"
 
 Direct2DAttachment::Direct2DAttachment(juce::Component* owner_) :
-    owner(owner_),
+    //owner(owner_),
     originalComponentWatcher(this, owner_)
 {
 }
@@ -39,7 +39,7 @@ Direct2DAttachment::~Direct2DAttachment()
     detach();
 }
 
-void Direct2DAttachment::attach(bool wmPaintEnabled_)
+void Direct2DAttachment::attach()
 {
     jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
     jassert(originalComponentWatcher.getComponent());
@@ -48,12 +48,11 @@ void Direct2DAttachment::attach(bool wmPaintEnabled_)
 
     juce::ScopedLock locker{ lock };
 
-    wmPaintEnabled = wmPaintEnabled_;
     wmPaintCount = 0;
 
     attached = true;
 
-    createDirect2DContext();
+    createDirect2DContext(originalComponentWatcher.getComponent()->getPeer());
 }
 
 void Direct2DAttachment::detach()
@@ -128,7 +127,7 @@ void Direct2DAttachment::paintImmediately()
         return;
     }
 
-    if (direct2DLowLevelGraphicsContext && owner)
+    if (direct2DLowLevelGraphicsContext && originalComponentWatcher.getComponent())
     {
         juce::Graphics g{ *direct2DLowLevelGraphicsContext };
 
@@ -138,7 +137,7 @@ void Direct2DAttachment::paintImmediately()
         {
             if (juce::MessageManager::getInstance()->isThisTheMessageThread())
             {
-                if (auto peer = owner->getPeer())
+                if (peer)
                 {
                     peer->handlePaint(*direct2DLowLevelGraphicsContext);
                 }
@@ -154,7 +153,7 @@ void Direct2DAttachment::paintImmediately()
                 }
             }
         }
-        JUCE_CATCH_EXCEPTION
+        JUCE_CATCH_EXCEPTION;
 
         direct2DLowLevelGraphicsContext->end();
 
@@ -198,53 +197,51 @@ void Direct2DAttachment::resetStats()
     lastPaintTicks = 0;
 }
 
-void Direct2DAttachment::createDirect2DContext()
+void Direct2DAttachment::createDirect2DContext(juce::ComponentPeer* peer_)
 {
 #if JUCE_DIRECT2D
     jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
 
-    if (owner)
+    if (originalComponentWatcher.getComponent() && peer_)
     {
-        if (auto peer = owner->getPeer())
-        {
-            //
-            // Make sure the window is in software mode; otherise the peer will have its own Direct2D context
-            // which will conflict with the one about to be created
-            //
-            peer->setCurrentRenderingEngine(0);
+        //
+        // Make sure the window is in software mode; otherise the peer will have its own Direct2D context
+        // which will conflict with the one about to be created
+        //
+        peer = peer_;
+        peer_->setCurrentRenderingEngine(0);
 
-            //
-            // Make a Direct2DLowLevelGraphicsContext
-            //
-            auto hwnd = (HWND)peer->getNativeHandle();
-            direct2DLowLevelGraphicsContext = nullptr;
-            direct2DLowLevelGraphicsContext = std::make_unique<juce::Direct2DLowLevelGraphicsContext>(hwnd);
+        //
+        // Make a Direct2DLowLevelGraphicsContext
+        //
+        auto hwnd = (HWND)peer->getNativeHandle();
+        direct2DLowLevelGraphicsContext = nullptr;
+        direct2DLowLevelGraphicsContext = std::make_unique<juce::Direct2DLowLevelGraphicsContext>(hwnd);
 
-            //
-            // I'd like to turn WM_PAINT off completely, but it still seems to be necessary
-            //
-            if (!wmPaintEnabled)
-            {
-                SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
-            }
+        //
+        // I'd like to turn WM_PAINT off completely, but it still seems to be necessary
+        //
+//         if (!wmPaintEnabled)
+//         {
+//             SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+//         }
 
-            //
-            // Subclass the window to take over painting and sizing for the window
-            //
-            auto ok = SetWindowSubclass(hwnd, subclassProc, windowSubclassID, (DWORD_PTR)this);
-            jassert(ok);
-            juce::ignoreUnused(ok);
+        //
+        // Subclass the window to take over painting and sizing for the window
+        //
+        auto ok = SetWindowSubclass(hwnd, subclassProc, windowSubclassID, (DWORD_PTR)this);
+        jassert(ok);
+        juce::ignoreUnused(ok);
 
-            //
-            // Make sure the window is sized properly
-            //
-            handleResize();
+        //
+        // Make sure the window is sized properly
+        //
+        handleResize();
 
-            //
-            // Need to attach a different watcher to the desktop component in case the size is changed internally by JUCE
-            //
-            desktopComponentWatcher = std::make_unique<DesktopComponentWatcher>(this, owner->getTopLevelComponent());
-        }
+        //
+        // Need to attach a different watcher to the desktop component in case the size is changed internally by JUCE
+        //
+        desktopComponentWatcher = std::make_unique<DesktopComponentWatcher>(this, originalComponentWatcher.getComponent()->getTopLevelComponent());
     }
 #endif
 }
@@ -261,20 +258,17 @@ void Direct2DAttachment::removeDirect2DContext()
 
     if (desktopComponentWatcher)
     {
-        if (auto desktopComponent = desktopComponentWatcher->getComponent())
+        if (peer)
         {
-            if (auto peer = desktopComponent->getPeer())
-            {
-                auto hwnd = (HWND)peer->getNativeHandle();
+            auto hwnd = (HWND)peer->getNativeHandle();
 
-                SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+            //SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
 
-                auto ok = RemoveWindowSubclass(hwnd, subclassProc, windowSubclassID);
-                jassert(ok);
-                juce::ignoreUnused(ok);
+            auto ok = RemoveWindowSubclass(hwnd, subclassProc, windowSubclassID);
+            jassert(ok);
+            juce::ignoreUnused(ok);
 
-                InvalidateRect(hwnd, nullptr, TRUE);
-            }
+            InvalidateRect(hwnd, nullptr, TRUE);
         }
 
         desktopComponentWatcher = nullptr;
@@ -300,7 +294,7 @@ void Direct2DAttachment::AttachedComponentPeerWatcher::componentPeerChanged()
     //
     // See if the window is on the desktop
     //
-    if (auto peer = getComponent()->getPeer())
+    if (auto attachedComponentPeer = getComponent()->getPeer())
     {
         if (auto windowComponent = getComponent()->getTopLevelComponent())
         {
@@ -309,7 +303,7 @@ void Direct2DAttachment::AttachedComponentPeerWatcher::componentPeerChanged()
                 //
                 // The window is on the desktop and has a window handle; OK to create the Direct2D context
                 //
-                direct2DAttachment->createDirect2DContext();
+                direct2DAttachment->createDirect2DContext(attachedComponentPeer);
                 return;
             }
         }
@@ -342,86 +336,3 @@ void Direct2DAttachment::DesktopComponentWatcher::componentMovedOrResized(bool /
     }
 #endif
 }
-
-#if 0 
-
-//
-// Test window
-//
-class DesktopWindow : public juce::DocumentWindow
-{
-public:
-    DesktopWindow() :
-        DocumentWindow("D2D Desktop Window", juce::Colours::black, juce::DocumentWindow::allButtons)
-    {
-        setUsingNativeTitleBar(true);
-        setContentOwned(new Content, true);
-        setResizable(true, true);
-        centreWithSize(getWidth(), getHeight());
-
-        setVisible(true);
-    }
-
-    ~DesktopWindow() override = default;
-
-    void closeButtonPressed() override
-    {
-    }
-
-    class Content : public juce::Component
-    {
-    public:
-        Content() :
-            d2dAttachment(this)
-        {
-            setSize(500, 500);
-
-            d2dAttachment.attach(this);
-        }
-        ~Content() override = default;
-
-        void paint(juce::Graphics& g) override
-        {
-            g.fillAll(juce::Colours::black);
-            g.setColour(juce::Colours::white);
-
-            g.setFont(40.0f);
-            g.addTransform(juce::AffineTransform::rotation(animationPosition.phase, getWidth() * 0.5f, getHeight() * 0.5f));
-            g.drawText("Direct2D " + juce::String{ paintCount++ }, getLocalBounds(), juce::Justification::centred);
-        }
-
-        void onVBlank()
-        {
-            //
-            // Measure elapsed time since last paint
-            //
-            auto now = juce::Time::getHighResolutionTicks();
-            auto elapsedSeconds = juce::Time::highResolutionTicksToSeconds(now - lastPaintTicks);
-
-            //
-            // Advance the animation position by the elapsed time
-            //
-            animationPosition.advance((float)(juce::MathConstants<double>::twoPi * rotationsPerSecond * elapsedSeconds));
-
-            //
-            // Paint immediately if it's been more than 20 msec
-            //
-            if (elapsedSeconds >= 0.02)
-            {
-                d2dAttachment.paintImmediately();
-
-                lastPaintTicks = now;
-            }
-        }
-
-        Direct2DAttachment d2dAttachment;
-        juce::VBlankAttachment vblankAttachment{ this, [this]() { onVBlank(); } };
-
-        juce::dsp::Phase<float> animationPosition;
-        int64_t lastPaintTicks = juce::Time::getHighResolutionTicks();
-        double const rotationsPerSecond = 0.25;
-        int paintCount = 0;
-    };
-};
-
-#endif
