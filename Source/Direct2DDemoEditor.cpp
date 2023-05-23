@@ -77,7 +77,6 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
 
     if (audioProcessor.outputRingBuffer.getNumItemsStored() > 0)
     {
-        //energyPaintSpectrum.copyFrom(processorOutput->energySpectrum);
         audioProcessor.outputRingBuffer.advanceReadPosition();
     }
 
@@ -312,8 +311,7 @@ void Direct2DDemoEditor::updateRenderer()
     case RenderMode::vblankAttachmentDirect2D:
     case RenderMode::dedicatedThreadDirect2D:
     {
-        bool wmPaintEnabled = true;
-        d2dAttachment.attach(this, wmPaintEnabled);
+        d2dAttachment.attach(this);
     }
     }
 
