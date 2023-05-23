@@ -47,7 +47,7 @@ This cuts out two steps, removes one source of timing jitter, and cuts down on m
 
 ## "Direct2D from dedicated thread" mode
 
-This is using the same modified Direct2DLowLevelGraphicsContext as the previous case. In this mode, the editor launches a dedicated paint thread and paints from that thread instead of the message thread. The VSyncThread really isn't necessary with Direct2D anyhow; Direct2D can handle VSync when it presents a frame to the GPU.
+This is using the same modified Direct2DLowLevelGraphicsContext as the previous case. In this mode, the editor launches a dedicated paint thread and paints from that thread instead of the message thread. The editor can't use the JUCE VSyncThread or VBlankAttachment here; VSyncThread only supports callbacks on the message thread. The VSyncThread really isn't necessary with Direct2D anyhow; Direct2D can handle VSync when it presents a frame to the GPU.
 
 This mode does not use a VBlankAttachment; instead, the plugin editor uses the audio clock as a timing source. The sequence of events for this mode is a little different:
 
@@ -182,8 +182,8 @@ public:
 };
 ```
 
-You can continue to use repaint() and paint() as before. Or - call paintImmediately() to paint the entire window from a timer callback, or from any thread. Once again - painting off the message thread is tricky! Be sure to use the Direct2DAttachment lock to synchronize between the message thread and the painting thread.
+You can continue to use repaint() and paint() as before. Or - call paintImmediately() to paint the entire window from a timer callback, or from any thread. Once again - painting on any thread other than the message thread is tricky! Be sure to use the Direct2DAttachment lock to synchronize between the message thread and the painting thread.
 
-Painting off the message thread also doesn't support Component effects like drop shadows or transformed Components; for now, it's really just a proof-of-concept.
+Also - note that calling paintImmediately() from a painting thread doesn't support transformed Components or effects like drop shadows; for now, it's really just a proof-of-concept.
 
 The plugin demonstrates how to use Direct2DAttachment to render both on and off the message thread.
