@@ -4,11 +4,11 @@ A JUCE-based VST3 plugin demonstrating Direct2D rendering in a JUCE Component.
 
 # Overview
 
-This is a Windows VST3 plugin that displays a music visualizer. The plugin can switch between the standard JUCE software renderer, Direct2D rendering, or Direct2D rendering from a background thread.
+This is a Windows VST3 plugin for demonstrating and testing the performance of Direct2D rendering with JUCE. The plugin editor displays a stereo frequency spectrum and painting statistics. The plugin can switch between the standard JUCE software renderer, Direct2D rendering, or Direct2D rendering from a background thread. 
 
 ![Direct2D-big-120FPS](https://github.com/mattgonzalez/Direct2DDemoPlugin/assets/1240735/d6911be8-2081-4397-9e86-13c3a61137fa)
 
-The plugin displays statistics showing the interval between each frame and how long each frame took to paint.
+The statistics in the corner show the interval between each frame and how long each frame took to paint.
 
 ![Direct2D-big-120FPS-stats](https://github.com/mattgonzalez/Direct2DDemoPlugin/assets/1240735/35757947-27b0-454c-b245-b60f8caf3fcc)
 
@@ -18,7 +18,7 @@ To switch modes, hover over the arrow in the corner to show the settings panel. 
 
 The diagram on the settings panel shows the sequence of events for painting a new frame.
 
-## "JUCE software renderer" mode
+## JUCE software renderer mode
 
 This is the standard JUCE software-based renderer using Windows GDI (BeginPaint, etc). The plugin editor uses a JUCE VBlankAttachment to listen for the monitor's vertical blank interval and uses the standard JUCE methods to repaint the window.
 
@@ -33,11 +33,11 @@ Here's the sequence of events involved in painting a new frame:
 Note that there are two significant sources of unpredictable delay; the time between the VSyncThread posting and the onVBlank callback, and the time between calling repaint() and the paint callback. Under a light load this is probably fine, but as the message loop gets busier the animation timing will get sloppier.
 
 
-## "Direct2D from VBlankAttachment" mode
+## Direct2D from VBlankAttachment mode
 
-This is using a modified and rewritten JUCE Direct2DLowLevelGraphicsContext to render. Here, the plugin editor is also using a JUCE VBlankAttachment to listen for the vertical blank. Direct2D can render immediately without waiting for the repaint -> WM_PAINT cycle, so the editor paints the window directly from within the onVBlank callback.
+This is using a modified JUCE Direct2DLowLevelGraphicsContext to render. Here, the plugin editor is also using a JUCE VBlankAttachment to listen for the vertical blank. Direct2D can render immediately without waiting for the repaint -> WM_PAINT cycle, so the editor paints the window directly from within the onVBlank callback.
 
-Here's the sequence of events for this mode:
+In this mode:
 
 - The JUCE internal VSyncThread waits for the next vertical blank, then posts a message to the message thread
 - The message thread receives and delivers the message, resulting in an onVBlank callback to the VBlankAttachment for the plugin editor
@@ -183,9 +183,8 @@ public:
 };
 ```
 
-You can continue to use repaint() and paint() as before. Or - call paintImmediately to paint the entire window from a timer callback, or from any thread Once again - painting off the message thread is risky! You need to be very careful about creating and destroying components on the fly, plus many more issues like that. Be sure to use the Direct2DAttachment lock to synchronize between the message thread and the painting thread.
+You can continue to use repaint() and paint() as before. Or - call paintImmediately to paint the entire window from a timer callback, or from any thread Once again - painting off the message thread is tricky! Be sure to use the Direct2DAttachment lock to synchronize between the message thread and the painting thread.
 
-Painting off the message thread also doesn't support Component effects like drop shadows or transformed Components; it's really just a proof-of-concept.
+Painting off the message thread also doesn't support Component effects like drop shadows or transformed Components; for now it's really just a proof-of-concept.
 
-Happy rendering!
 
