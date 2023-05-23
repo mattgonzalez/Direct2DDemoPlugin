@@ -85,7 +85,7 @@ Direct2D is off by default. To switch to Direct2Dmode, enable it in the construc
 
 ```
             //
-            // Turn on Direct2D mode; make sure this window is on the desktop and has a ComponentPeer
+            // Turn on Direct2D mode; make sure to do this after the window has been added to the desktop
             //
             #if JUCE_DIRECT2D
             jassert(getPeer() && isOnDesktop());
@@ -96,17 +96,19 @@ Direct2D is off by default. To switch to Direct2Dmode, enable it in the construc
             #endif
 ```
 
-That's all you need to do. Calling repaint(), paint() functions, and the Graphics class should all work just as they did before. However, there's no support for on-demand painting; you'll still need to call repaint() and wait for the WM_PAINT message as before.
+Calling repaint(), paint() functions, and the Graphics class should all work just as they did before. However, there's no support for on-demand painting; you'll still need to call repaint() and wait for the WM_PAINT message as before.
 
 # Direct2DAttachment
 
-Check out the Direct2DAttachment class in the plugin. All you have to do is create one as a member of any component and then call Direct2DAttachment::attach; Direct2DAttachment will find the desktop parent of that component and set up Direct2D. It then turns off the redirection surface for the window and subclasses the window in order to intercept paint and sizing messages. 
+The Direct2DAttachment class sets up Direct2D rendering and enables on-demand painting.
+
+All you have to do is create one as a member of any component and then call Direct2DAttachment::attach(); Direct2DAttachment will find the desktop parent of that component and set up Direct2D for the whole window. It then turns off the redirection surface for the window and subclasses the window in order to intercept paint and sizing messages.
 
 ```
-class DesktopWindow : public juce::DocumentWindow
+class Direct2DAttachmentExample : public juce::DocumentWindow
 {
 public:
-    DesktopWindow() :
+    Direct2DAttachmentExample() :
         DocumentWindow("D2D Desktop Window", juce::Colours::black, juce::DocumentWindow::allButtons)
     {
         setUsingNativeTitleBar(true);
@@ -117,7 +119,7 @@ public:
         setVisible(true);
     }
 
-    ~DesktopWindow() override = default;
+    ~Direct2DAttachmentExample() override = default;
 
     void closeButtonPressed() override
     {
@@ -131,10 +133,7 @@ public:
         {
             setSize(500, 500);
 
-            //
-            // Enable Direct2D
-            //
-            d2dAttachment.attach(this);
+            d2dAttachment.attach();
         }
         ~Content() override = default;
 
@@ -183,8 +182,8 @@ public:
 };
 ```
 
-You can continue to use repaint() and paint() as before. Or - call paintImmediately to paint the entire window from a timer callback, or from any thread Once again - painting off the message thread is tricky! Be sure to use the Direct2DAttachment lock to synchronize between the message thread and the painting thread.
+You can continue to use repaint() and paint() as before. Or - call paintImmediately() to paint the entire window from a timer callback, or from any thread Once again - painting off the message thread is tricky! Be sure to use the Direct2DAttachment lock to synchronize between the message thread and the painting thread.
 
 Painting off the message thread also doesn't support Component effects like drop shadows or transformed Components; for now it's really just a proof-of-concept.
 
-
+The plugin demonstrates how to use Direct2DAttachment to render both on and off the message thread.
