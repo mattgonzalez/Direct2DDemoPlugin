@@ -26,14 +26,100 @@ SOFTWARE.
 
 #include <JuceHeader.h>
 
+//==============================================================================
+/**
+    Direct2DAttachment sets up Direct2D rendering for a Component and provides
+    support for immediate rendering from any thread.
+
+    To use Direct2D, add a Direct2DAttachment as a member of one of your Components and then call attach(). 
+
+
+    class Direct2DAttachmentExample : public juce::DocumentWindow
+    {
+    public:
+        Direct2DAttachmentExample() :
+            DocumentWindow("D2D Desktop Window", juce::Colours::black, juce::DocumentWindow::allButtons)
+        {
+            setUsingNativeTitleBar(true);
+            setContentOwned(new Content, true);
+            setResizable(true, true);
+            centreWithSize(getWidth(), getHeight());
+
+            setVisible(true);
+        }
+
+        ~Direct2DAttachmentExample() override = default;
+
+        void closeButtonPressed() override
+        {
+        }
+
+        class Content : public juce::Component
+        {
+        public:
+            Content() :
+                d2dAttachment(this)
+            {
+                setSize(500, 500);
+
+                d2dAttachment.attach();
+            }
+            ~Content() override = default;
+
+            void paint(juce::Graphics& g) override
+            {
+                g.fillAll(juce::Colours::black);
+                g.setColour(juce::Colours::white);
+
+                g.setFont(40.0f);
+                g.addTransform(juce::AffineTransform::rotation(animationPosition.phase, getWidth() * 0.5f, getHeight() * 0.5f));
+                g.drawText("Direct2D " + juce::String{ paintCount++ }, getLocalBounds(), juce::Justification::centred);
+            }
+
+            void onVBlank()
+            {
+                //
+                // Measure elapsed time since last paint
+                //
+                auto now = juce::Time::getHighResolutionTicks();
+                auto elapsedSeconds = juce::Time::highResolutionTicksToSeconds(now - lastPaintTicks);
+
+                //
+                // Advance the animation position by the elapsed time
+                //
+                animationPosition.advance((float)(juce::MathConstants<double>::twoPi * rotationsPerSecond * elapsedSeconds));
+
+                //
+                // Paint immediately if it's been more than 20 msec
+                //
+                if (elapsedSeconds >= 0.02)
+                {
+                    d2dAttachment.paintImmediately();
+
+                    lastPaintTicks = now;
+                }
+            }
+
+            Direct2DAttachment d2dAttachment;
+            juce::VBlankAttachment vblankAttachment{ this, [this]() { onVBlank(); } };
+
+            juce::dsp::Phase<float> animationPosition;
+            int64_t lastPaintTicks = juce::Time::getHighResolutionTicks();
+            double const rotationsPerSecond = 0.25;
+            int paintCount = 0;
+        };
+    };
+*/
+
 class Direct2DAttachment
 {
 public:
     Direct2DAttachment(juce::Component* owner_);
     ~Direct2DAttachment();
 
-    void attach(bool wmPaintEnabled_ = true);
+    void attach();
     void detach();
+
     bool isAttachmentPending() const noexcept
     {
         return attached && direct2DLowLevelGraphicsContext == nullptr;
@@ -65,9 +151,12 @@ protected:
     juce::CriticalSection lock;
     juce::ComponentPeer* peer = nullptr;
     bool attached = false;
-    bool wmPaintEnabled = false;
     int64_t windowSubclassID = juce::Time::getHighResolutionTicks();
-    
+       
+    //
+    // Use this component watcher to create the Direct2D low-level graphics context when there's a new ComponentPeer
+    // or to free Direct2D if the ComponentPeer goes away
+    //
     struct AttachedComponentPeerWatcher : public juce::ComponentMovementWatcher
     {
         AttachedComponentPeerWatcher(Direct2DAttachment* direct2DAttachment_, juce::Component* component_);
@@ -80,6 +169,10 @@ protected:
         Direct2DAttachment* direct2DAttachment = nullptr;
     } originalComponentWatcher;
 
+    //
+    // This watcher just listens for window size changes on the desktop parent in case the window is resized by
+    // the app internally
+    //
     struct DesktopComponentWatcher : public juce::ComponentMovementWatcher
     {
         DesktopComponentWatcher(Direct2DAttachment* direct2DAttachment_, juce::Component* desktopComponent_);

@@ -22,9 +22,9 @@ SOFTWARE.
 
 */
 
-#include "ProcessorOutputRingBuffer.h"
+#include "ProcessorOutputFIFO.h"
 
-void ProcessorOutputRingBuffer::setSize(int numItems, int numChannels, int fftSize)
+void ProcessorOutputFIFO::setSize(int numItems, int numChannels, int fftSize)
 {
     ringController.setRingSize(numItems);
 
@@ -40,7 +40,7 @@ void ProcessorOutputRingBuffer::setSize(int numItems, int numChannels, int fftSi
     }
 }
 
-void ProcessorOutputRingBuffer::reset()
+void ProcessorOutputFIFO::reset()
 {
     ringController.reset(0);
     for (auto entry: array)
@@ -50,27 +50,27 @@ void ProcessorOutputRingBuffer::reset()
     }
 }
 
-ProcessorOutput* const ProcessorOutputRingBuffer::getWritePointer() const
+ProcessorOutput* const ProcessorOutputFIFO::getWritePointer() const
 {
     return array[ringController.getWritePosition()];    
 }
 
-ProcessorOutput const* const ProcessorOutputRingBuffer::getMostRecent() const
+ProcessorOutput const* const ProcessorOutputFIFO::getMostRecent() const
 {
     return array[ringController.getWritePosition(-1)];
 }
 
-void ProcessorOutputRingBuffer::advanceWritePosition()
+void ProcessorOutputFIFO::advanceWritePosition()
 {
     ringController.advanceWritePosition(1);
 }
 
-void ProcessorOutputRingBuffer::advanceReadPosition()
+void ProcessorOutputFIFO::advanceReadPosition()
 {
     ringController.flush();
 }
 
-int ProcessorOutputRingBuffer::getNumItemsStored() const
+int ProcessorOutputFIFO::getNumItemsStored() const
 {
     return ringController.getNumItemsStored();
 }

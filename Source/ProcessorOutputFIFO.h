@@ -24,46 +24,28 @@ SOFTWARE.
 
 #pragma once
 
-#include "RingBufferController.h"
+#include "FIFOController.h"
+#include "Spectrum.h"
 
-class AudioRingBuffer
+struct ProcessorOutput
+{
+    RealSpectrum<float> spectrum;
+    RealSpectrum<float> averageSpectrum;
+};
+
+class ProcessorOutputFIFO
 {
 public:
-    void setSize(int numChannels, int numSamples);
-    void reset(int numStoredSamples);
-    void write(juce::AudioBuffer<float> const& source);
-    void read(juce::AudioBuffer<float>& destination, int numSamplesToCopy, int ringAdvanceCount);
+    void setSize(int numItems, int numChannels, int fftSize);
+    void reset();
+    ProcessorOutput* const getWritePointer() const;
+    ProcessorOutput const * const getMostRecent() const;
+    void advanceWritePosition();
+    void advanceReadPosition();
 
-    int getNumSamples() const
-    {
-        return buffer.getNumSamples();
-    }
-
-    int getNumSamplesStored() const
-    {
-        return ringController.getNumItemsStored();
-    }
+    int getNumItemsStored() const;
 
 private:
-    RingBufferController ringController;
-    juce::AudioBuffer<float> buffer;
+    FIFOController ringController;
+    juce::OwnedArray<ProcessorOutput> array;
 };
-
-#if RUN_UNIT_TESTS
-
-class AudioRingBufferTest : public juce::UnitTest
-{
-public:
-    AudioRingBufferTest();
-
-    int getRandomCount(int count);
-    void checkRead(juce::AudioBuffer<float> const& source);
-    void makeRamp(juce::AudioBuffer<float>& buffer, float startValue);
-
-    void runTest() override;
-
-    AudioRingBuffer ringBuffer;
-    juce::Random random;
-};
-
-#endif

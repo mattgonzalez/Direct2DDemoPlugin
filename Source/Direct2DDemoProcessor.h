@@ -25,9 +25,9 @@ SOFTWARE.
 #pragma once
 
 #include <JuceHeader.h>
-#include "AudioRingBuffer.h"
+#include "AudioFIFO.h"
 #include "Spectrum.h"
-#include "ProcessorOutputRingBuffer.h"
+#include "ProcessorOutputFIFO.h"
 
 enum RenderMode
 {
@@ -84,8 +84,8 @@ public:
     int fftOverlapSkipSamples = 0;
     double fftHertzPerBin = 0.0;
     juce::WaitableEvent readyEvent;
-    AudioRingBuffer inputRingBuffer;
-    ProcessorOutputRingBuffer outputRingBuffer;
+    AudioFIFO inputFIFO;
+    ProcessorOutputFIFO outputFIFO;
 
     struct Parameters
     {

@@ -24,39 +24,46 @@ SOFTWARE.
 
 #pragma once
 
-#include <JuceHeader.h>
+#include "FIFOController.h"
 
-class RingBufferController
+class AudioFIFO
 {
 public:
-    RingBufferController();
+    void setSize(int numChannels, int numSamples);
+    void reset(int numStoredSamples);
+    void write(juce::AudioBuffer<float> const& source);
+    void read(juce::AudioBuffer<float>& destination, int numSamplesToCopy, int ringAdvanceCount);
 
-    struct Block
+    int getNumSamples() const
     {
-        int position;
-        int count;
-    };
-
-    int setRingSize(int numItems);
-    int getRingSize() const
-    {
-        return ringSize;
+        return buffer.getNumSamples();
     }
-    void reset(int numStoredItems);
-    int getNumItemsStored() const;
 
-    Block getWriteBlock(int numItemsWanted);
-    Block getReadBlock(int numItemsWanted, int numItemsAlreadyRead);
-
-    int getReadPosition(int offset = 0) const;
-    int getWritePosition(int offset = 0) const;
-    int getSafeTransferCount(int numItemsWanted, int position) const;
-    void advanceReadPosition(int count);
-    void advanceWritePosition(int count);
-    void flush();
+    int getNumSamplesStored() const
+    {
+        return ringController.getNumItemsStored();
+    }
 
 private:
-    int readCount = 0;
-    int writeCount = 0;
-    int ringSize = 0;
+    FIFOController ringController;
+    juce::AudioBuffer<float> buffer;
 };
+
+#if RUN_UNIT_TESTS
+
+class AudioRingBufferTest : public juce::UnitTest
+{
+public:
+    AudioRingBufferTest();
+
+    int getRandomCount(int count);
+    void checkRead(juce::AudioBuffer<float> const& source);
+    void makeRamp(juce::AudioBuffer<float>& buffer, float startValue);
+
+    void runTest() override;
+
+    AudioFIFO ringBuffer;
+    juce::Random random;
+};
+
+#endif

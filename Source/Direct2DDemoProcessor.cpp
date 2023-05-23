@@ -58,11 +58,11 @@ void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int /*samplesPerBl
     sampleRate = sampleRate_;
     fftHertzPerBin = sampleRate_ / fft.getSize();
 
-    inputRingBuffer.setSize(2, fft.getSize() * 4);
-    inputRingBuffer.reset(0);
+    inputFIFO.setSize(2, fft.getSize() * 4);
+    inputFIFO.reset(0);
 
-    outputRingBuffer.setSize(2 /* numItems */, 2 /* numChannels */, fft.getSize());
-    outputRingBuffer.reset();
+    outputFIFO.setSize(2 /* numItems */, 2 /* numChannels */, fft.getSize());
+    outputFIFO.reset();
 
     fftOverlapSkipSamples = fft.getSize() - juce::roundToInt(fftOverlapPercent * 0.01f * fft.getSize());
     auto spectraPerSecond = (float)sampleRate_ / (float)fftOverlapSkipSamples;
@@ -92,10 +92,10 @@ void Direct2DDemoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     juce::ScopedNoDenormals noDenormals;
 
     //
-    // FFT
+    // Store samples in the FIFO and run the FFT if there's enough data
     //
-    inputRingBuffer.write(buffer);
-    while (inputRingBuffer.getNumSamplesStored() >= fft.getSize())
+    inputFIFO.write(buffer);
+    while (inputFIFO.getNumSamplesStored() >= fft.getSize())
     {
         processFFT();
     }
@@ -108,7 +108,7 @@ void Direct2DDemoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
 void Direct2DDemoProcessor::processFFT()
 {
-    auto processorOutput = outputRingBuffer.getWritePointer();
+    auto processorOutput = outputFIFO.getWritePointer();
     auto& spectrum = processorOutput->spectrum;
     auto& averageSpectrum = processorOutput->averageSpectrum;
 
@@ -118,7 +118,7 @@ void Direct2DDemoProcessor::processFFT()
     // only partially advance the read count for the ring so the next FFT overlaps
     //
     fftWorkBuffer.clear();
-    inputRingBuffer.read(fftWorkBuffer, fft.getSize(), fftOverlapSkipSamples);
+    inputFIFO.read(fftWorkBuffer, fft.getSize(), fftOverlapSkipSamples);
 
     //
     // Run the FFT for each channel
@@ -160,7 +160,7 @@ void Direct2DDemoProcessor::processFFT()
     //
     // Bump the ring buffer
     //
-    outputRingBuffer.advanceWritePosition();
+    outputFIFO.advanceWritePosition();
 }
 
 juce::AudioProcessorEditor* Direct2DDemoProcessor::createEditor()
