@@ -2,10 +2,12 @@
 
 <JUCERPROJECT id="fNv8Vr" name="Direct2D Demo Plugin" projectType="audioplug"
               useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1"
-              pluginVST3Category="Analyzer" companyWebsite="echotm.com" bundleIdentifier="com.echotm.Direct2DDemoPlugin"
+              pluginVST3Category="Analyzer" bundleIdentifier="com.github.mattgonzalez.Direct2DDemoPlugin"
               pluginManufacturer="Echo Test + Measurement" aaxIdentifier="com.echotm.Direct2DDemoPlugin"
               pluginFormats="buildStandalone,buildVST3" defines="RUN_UNIT_TESTS=0"
-              cppLanguageStandard="latest">
+              cppLanguageStandard="latest" version="0.5.0" companyWebsite="https://github.com/mattgonzalez/Direct2DDemoPlugin"
+              companyName="Direct2DDemoPlugin" companyCopyright="Copyright (c) 2023 Matthew Gonzalez"
+              companyEmail="matt@echotm.com">
   <MAINGROUP id="j43yYM" name="Direct2D Demo Plugin">
     <GROUP id="{AF67DE6E-462D-758A-F6BA-2BD11FE946BA}" name="Source">
       <FILE id="rYar4E" name="AudioRingBuffer.cpp" compile="1" resource="0"
