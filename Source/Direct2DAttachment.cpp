@@ -28,7 +28,9 @@ SOFTWARE.
 #endif
 #include "Direct2DAttachment.h"
 
-Direct2DAttachment::Direct2DAttachment()
+Direct2DAttachment::Direct2DAttachment(juce::Component* owner_) :
+    owner(owner_),
+    originalComponentWatcher(this, owner_)
 {
 }
 
@@ -37,24 +39,21 @@ Direct2DAttachment::~Direct2DAttachment()
     detach();
 }
 
-void Direct2DAttachment::attach(juce::Component* component_, bool wmPaintEnabled_)
+void Direct2DAttachment::attach(bool wmPaintEnabled_)
 {
-    DBG("Direct2DAttachment::attach " << component_->getName() << " WM_PAINT enabled:" << (int)wmPaintEnabled_);
-
     jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
-    jassert(component_);
+    jassert(originalComponentWatcher.getComponent());
 
     detach();
 
     juce::ScopedLock locker{ lock };
 
-    component = component_;
     wmPaintEnabled = wmPaintEnabled_;
     wmPaintCount = 0;
 
-    createDirect2DContext();
+    attached = true;
 
-    originalComponentWatcher = std::make_unique<AttachedComponentPeerWatcher>(this);
+    createDirect2DContext();
 }
 
 void Direct2DAttachment::detach()
@@ -65,15 +64,12 @@ void Direct2DAttachment::detach()
 
     removeDirect2DContext();
 
-    originalComponentWatcher = nullptr;
     desktopComponentWatcher = nullptr;
 
-    component = nullptr;
+    attached = false;
 }
 
 #if JUCE_DIRECT2D
-
-static constexpr int windowSubclassID = 0xd2d12;
 
 static LRESULT subclassProc(HWND hwnd, UINT umsg, WPARAM wParam, LPARAM lParam, UINT_PTR /*uIdSubclass*/, DWORD_PTR dwRefData)
 {
@@ -132,7 +128,7 @@ void Direct2DAttachment::paintImmediately()
         return;
     }
 
-    if (direct2DLowLevelGraphicsContext && component)
+    if (direct2DLowLevelGraphicsContext && owner)
     {
         juce::Graphics g{ *direct2DLowLevelGraphicsContext };
 
@@ -142,7 +138,7 @@ void Direct2DAttachment::paintImmediately()
         {
             if (juce::MessageManager::getInstance()->isThisTheMessageThread())
             {
-                if (auto peer = component->getPeer())
+                if (auto peer = owner->getPeer())
                 {
                     peer->handlePaint(*direct2DLowLevelGraphicsContext);
                 }
@@ -207,9 +203,9 @@ void Direct2DAttachment::createDirect2DContext()
 #if JUCE_DIRECT2D
     jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
 
-    if (component)
+    if (owner)
     {
-        if (auto peer = component->getPeer())
+        if (auto peer = owner->getPeer())
         {
             //
             // Make sure the window is in software mode; otherise the peer will have its own Direct2D context
@@ -245,9 +241,9 @@ void Direct2DAttachment::createDirect2DContext()
             handleResize();
 
             //
-            // Need to attach a watcher to the desktop component in case the size is changed internally by JUCE
+            // Need to attach a different watcher to the desktop component in case the size is changed internally by JUCE
             //
-            desktopComponentWatcher = std::make_unique<DesktopComponentWatcher>(this, component->getTopLevelComponent());
+            desktopComponentWatcher = std::make_unique<DesktopComponentWatcher>(this, owner->getTopLevelComponent());
         }
     }
 #endif
@@ -286,9 +282,13 @@ void Direct2DAttachment::removeDirect2DContext()
 #endif
 }
 
-Direct2DAttachment::AttachedComponentPeerWatcher::AttachedComponentPeerWatcher(Direct2DAttachment* direct2DAttachment_) :
-    ComponentMovementWatcher(direct2DAttachment_->component),
+Direct2DAttachment::AttachedComponentPeerWatcher::AttachedComponentPeerWatcher(Direct2DAttachment* direct2DAttachment_, juce::Component* component_) :
+    ComponentMovementWatcher(component_),
     direct2DAttachment(direct2DAttachment_)
+{
+}
+
+Direct2DAttachment::AttachedComponentPeerWatcher::~AttachedComponentPeerWatcher()
 {
 }
 
@@ -304,7 +304,7 @@ void Direct2DAttachment::AttachedComponentPeerWatcher::componentPeerChanged()
     {
         if (auto windowComponent = getComponent()->getTopLevelComponent())
         {
-            if (windowComponent->isOnDesktop() && !direct2DAttachment->isAttached())
+            if (windowComponent->isOnDesktop() && direct2DAttachment->isAttachmentPending())
             {
                 //
                 // The window is on the desktop and has a window handle; OK to create the Direct2D context
@@ -315,7 +315,10 @@ void Direct2DAttachment::AttachedComponentPeerWatcher::componentPeerChanged()
         }
     }
 
-    direct2DAttachment->detach();
+    //
+    // No component peer
+    //
+    direct2DAttachment->removeDirect2DContext();
 #endif
 }
 

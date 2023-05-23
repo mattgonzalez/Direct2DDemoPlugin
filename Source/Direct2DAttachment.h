@@ -29,11 +29,15 @@ SOFTWARE.
 class Direct2DAttachment
 {
 public:
-    Direct2DAttachment();
+    Direct2DAttachment(juce::Component* owner_);
     ~Direct2DAttachment();
 
-    void attach(juce::Component* owner_, bool wmPaintEnabled_ = true);
+    void attach(bool wmPaintEnabled_ = true);
     void detach();
+    bool isAttachmentPending() const noexcept
+    {
+        return attached && direct2DLowLevelGraphicsContext == nullptr;
+    }
     bool isAttached() const noexcept
     {
 #if JUCE_DIRECT2D
@@ -59,22 +63,28 @@ public:
 
 protected:
     juce::CriticalSection lock;
-    juce::Component::SafePointer<juce::Component> component;
+    juce::Component::SafePointer<juce::Component> owner;
+    bool attached = false;
     bool wmPaintEnabled = false;
+    const int windowSubclassID = (int)juce::Time::getHighResolutionTicks();
     
     struct AttachedComponentPeerWatcher : public juce::ComponentMovementWatcher
     {
-        AttachedComponentPeerWatcher(Direct2DAttachment* direct2DAttachment_);
+        AttachedComponentPeerWatcher(Direct2DAttachment* direct2DAttachment_, juce::Component* component_);
+        ~AttachedComponentPeerWatcher() override;
 
         void componentMovedOrResized(bool /*wasMoved*/, bool /*wasResized*/) override {}
         void componentPeerChanged() override;
         void componentVisibilityChanged() override {}
 
         Direct2DAttachment* direct2DAttachment = nullptr;
-    };
+    } originalComponentWatcher;
+
     struct DesktopComponentWatcher : public juce::ComponentMovementWatcher
     {
         DesktopComponentWatcher(Direct2DAttachment* direct2DAttachment_, juce::Component* desktopComponent_);
+        ~DesktopComponentWatcher() override = default;
+
         void componentMovedOrResized(bool /*wasMoved*/, bool wasResized) override;
         void componentPeerChanged() override {}
         void componentVisibilityChanged() override {}
@@ -86,7 +96,6 @@ protected:
     int64_t lastPaintTicks = juce::Time::getHighResolutionTicks();
     double const secondsPerTick = 1.0 / (double)juce::Time::getHighResolutionTicksPerSecond();
    
-    std::unique_ptr<AttachedComponentPeerWatcher> originalComponentWatcher;
     std::unique_ptr<DesktopComponentWatcher> desktopComponentWatcher;
 #if JUCE_DIRECT2D
     std::unique_ptr<juce::Direct2DLowLevelGraphicsContext> direct2DLowLevelGraphicsContext;

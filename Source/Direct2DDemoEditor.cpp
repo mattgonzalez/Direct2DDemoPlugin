@@ -28,6 +28,7 @@ SOFTWARE.
 Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
     : AudioProcessorEditor(&p),
     audioProcessor(p),
+    d2dAttachment(this),
     threadMessages(d2dAttachment.getLock()),
     timingSource(this, audioProcessor.readyEvent, threadMessages),
     settingsComponent(p)
