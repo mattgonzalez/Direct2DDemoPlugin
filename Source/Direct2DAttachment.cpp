@@ -342,3 +342,86 @@ void Direct2DAttachment::DesktopComponentWatcher::componentMovedOrResized(bool /
     }
 #endif
 }
+
+#if 0 
+
+//
+// Test window
+//
+class DesktopWindow : public juce::DocumentWindow
+{
+public:
+    DesktopWindow() :
+        DocumentWindow("D2D Desktop Window", juce::Colours::black, juce::DocumentWindow::allButtons)
+    {
+        setUsingNativeTitleBar(true);
+        setContentOwned(new Content, true);
+        setResizable(true, true);
+        centreWithSize(getWidth(), getHeight());
+
+        setVisible(true);
+    }
+
+    ~DesktopWindow() override = default;
+
+    void closeButtonPressed() override
+    {
+    }
+
+    class Content : public juce::Component
+    {
+    public:
+        Content() :
+            d2dAttachment(this)
+        {
+            setSize(500, 500);
+
+            d2dAttachment.attach(this);
+        }
+        ~Content() override = default;
+
+        void paint(juce::Graphics& g) override
+        {
+            g.fillAll(juce::Colours::black);
+            g.setColour(juce::Colours::white);
+
+            g.setFont(40.0f);
+            g.addTransform(juce::AffineTransform::rotation(animationPosition.phase, getWidth() * 0.5f, getHeight() * 0.5f));
+            g.drawText("Direct2D " + juce::String{ paintCount++ }, getLocalBounds(), juce::Justification::centred);
+        }
+
+        void onVBlank()
+        {
+            //
+            // Measure elapsed time since last paint
+            //
+            auto now = juce::Time::getHighResolutionTicks();
+            auto elapsedSeconds = juce::Time::highResolutionTicksToSeconds(now - lastPaintTicks);
+
+            //
+            // Advance the animation position by the elapsed time
+            //
+            animationPosition.advance((float)(juce::MathConstants<double>::twoPi * rotationsPerSecond * elapsedSeconds));
+
+            //
+            // Paint immediately if it's been more than 20 msec
+            //
+            if (elapsedSeconds >= 0.02)
+            {
+                d2dAttachment.paintImmediately();
+
+                lastPaintTicks = now;
+            }
+        }
+
+        Direct2DAttachment d2dAttachment;
+        juce::VBlankAttachment vblankAttachment{ this, [this]() { onVBlank(); } };
+
+        juce::dsp::Phase<float> animationPosition;
+        int64_t lastPaintTicks = juce::Time::getHighResolutionTicks();
+        double const rotationsPerSecond = 0.25;
+        int paintCount = 0;
+    };
+};
+
+#endif
