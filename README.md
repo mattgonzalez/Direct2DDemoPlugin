@@ -20,7 +20,7 @@ The diagram on the settings panel shows the sequence of events for painting a ne
 
 ## JUCE software renderer mode
 
-This is the standard JUCE software-based renderer using Windows GDI (BeginPaint, etc). The plugin editor uses a JUCE VBlankAttachment to listen for the monitor's vertical blank interval and uses the standard JUCE methods to repaint the window.
+This is the standard JUCE software-based renderer using Windows GDI. The plugin editor uses a JUCE VBlankAttachment to listen for the monitor's vertical blank interval and uses the standard JUCE methods to repaint the window.
 
 Here's the sequence of events involved in painting a new frame:
 
