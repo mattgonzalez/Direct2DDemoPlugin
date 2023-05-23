@@ -58,7 +58,7 @@ This mode does not use a VBlankAttachment; instead, the plugin editor uses the a
 
 This removes the potential delay from notifying the VBlankAttachment. There will still be delay between signaling the shared event and the paint thread waking up, but that should be shorter and more reliable than posting a message.
 
-Of course, painting off the message thread is risky! The JUCE component hierarchy is definitely not meant to be thread-safe. This mode is here primarily to demonstrate that this is possible and to show the timing benefits.
+Of course, painting from any other thread than the message thread is risky! The JUCE component hierarchy is definitely not meant to be thread-safe. This mode is here primarily to demonstrate that this is possible and to show the timing benefits.
 
 # Building the plugin
 
