@@ -152,7 +152,7 @@ void Direct2DDemoEditor::paintFrameIntervalStats(juce::Graphics& g, juce::Rectan
         if (auto averageFrameInterval = frameIntervalSeconds.getAverage(); averageFrameInterval > 0.0)
         {
             g.setColour(averageFrameIntervalColor);
-            g.drawText(juce::String{ 1.0 / averageFrameInterval, 1 }, r.translated(50, 0), juce::Justification::centredLeft);
+            g.drawText(juce::String{ 1.0 / averageFrameInterval, 1 }, r.translated(30, 0), juce::Justification::centredLeft);
         }
         r.translate(0, r.getHeight());
     }

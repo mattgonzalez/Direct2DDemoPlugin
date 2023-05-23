@@ -63,10 +63,10 @@ public:
 
 protected:
     juce::CriticalSection lock;
-    juce::Component::SafePointer<juce::Component> owner;
+    juce::ComponentPeer* peer = nullptr;
     bool attached = false;
     bool wmPaintEnabled = false;
-    const int windowSubclassID = (int)juce::Time::getHighResolutionTicks();
+    int64_t windowSubclassID = juce::Time::getHighResolutionTicks();
     
     struct AttachedComponentPeerWatcher : public juce::ComponentMovementWatcher
     {
@@ -101,6 +101,6 @@ protected:
     std::unique_ptr<juce::Direct2DLowLevelGraphicsContext> direct2DLowLevelGraphicsContext;
 #endif
 
-    void createDirect2DContext();
+    void createDirect2DContext(juce::ComponentPeer* peer_);
     void removeDirect2DContext();
 };
