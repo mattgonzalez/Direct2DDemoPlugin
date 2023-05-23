@@ -4,7 +4,7 @@ A JUCE-based VST3 plugin demonstrating Direct2D rendering in a JUCE Component.
 
 # Overview
 
-This is a Windows VST3 plugin for demonstrating Direct2D rendering with JUCE and measuring performance. The plugin editor displays a stereo frequency spectrum and painting statistics. The plugin can switch between the standard JUCE software renderer, Direct2D rendering, or Direct2D rendering from a background thread. 
+This is a Windows VST3 plugin demonstrating animated Direct2D rendering with JUCE. The plugin editor displays a stereo frequency spectrum and painting statistics. The plugin can switch between the standard JUCE software renderer, Direct2D rendering, or Direct2D rendering from a background thread. 
 
 ![Direct2D-big-120FPS](https://github.com/mattgonzalez/Direct2DDemoPlugin/assets/1240735/d6911be8-2081-4397-9e86-13c3a61137fa)
 
