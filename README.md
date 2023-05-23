@@ -184,6 +184,6 @@ public:
 
 You can continue to use repaint() and paint() as before. Or - call paintImmediately() to paint the entire window from a timer callback, or from any thread Once again - painting off the message thread is tricky! Be sure to use the Direct2DAttachment lock to synchronize between the message thread and the painting thread.
 
-Painting off the message thread also doesn't support Component effects like drop shadows or transformed Components; for now it's really just a proof-of-concept.
+Painting off the message thread also doesn't support Component effects like drop shadows or transformed Components; for now, it's really just a proof-of-concept.
 
 The plugin demonstrates how to use Direct2DAttachment to render both on and off the message thread.
