@@ -28,6 +28,7 @@ SOFTWARE.
 #include "AudioFIFO.h"
 #include "Spectrum.h"
 #include "ProcessorOutputFIFO.h"
+#include "ETW.h"
 
 enum RenderMode
 {
@@ -96,6 +97,7 @@ public:
     } parameters;
 
 private:
+    ETW etw;
     juce::dsp::FFT fft;
     float fftNormalizationScale = 1.0f;
     juce::dsp::WindowingFunction<float> fftWindow;

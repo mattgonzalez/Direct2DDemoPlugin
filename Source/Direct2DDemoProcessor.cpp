@@ -89,6 +89,8 @@ bool Direct2DDemoProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 
 void Direct2DDemoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& /*midiMessages*/)
 {
+    etw.log();
+
     juce::ScopedNoDenormals noDenormals;
 
     //
