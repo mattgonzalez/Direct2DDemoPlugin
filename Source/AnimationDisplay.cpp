@@ -31,7 +31,8 @@ AnimationDisplay::AnimationDisplay(Direct2DDemoProcessor& processor_, Direct2DAt
 {
     auto animation = std::make_unique<friz::Animation<1>>(1);
     //animation->setValue(0, std::make_unique<friz::Spring>(0.2f, 0.8f, 0.05f, 1.02f, 0.9f));
-    animation->setValue(0, std::make_unique<friz::Linear>(0.0f, 1.0f, 30 * 4));
+    auto frameRate = juce::roundToInt(processor_.parameters.frameRate.get());
+    animation->setValue(0, std::make_unique<friz::Linear>(0.0f, 1.0f, 3000));
 
     if (auto updater = dynamic_cast<friz::UpdateSource<1>*>(animation.get()))
     {
@@ -42,6 +43,7 @@ AnimationDisplay::AnimationDisplay(Direct2DDemoProcessor& processor_, Direct2DAt
             });
     }
         
+    setFrameRate(frameRate);
     frizAnimator.addAnimation(std::move(animation));
 }
 
@@ -54,7 +56,8 @@ void AnimationDisplay::setFrameRate(int frameRateHz)
 
 void AnimationDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds, ProcessorOutput const* const processorOutput, double timeSeconds)
 {
-    frizAnimator.gotoTime(juce::roundToInt(timeSeconds * 1000.0));
+    auto elapsed = juce::roundToInt(timeSeconds * 1000.0);
+    frizAnimator.gotoTime(elapsed);
 
     sprite.paint(g, bounds);
 }
@@ -62,5 +65,6 @@ void AnimationDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds, P
 void AnimationDisplay::Sprite::paint(juce::Graphics& g, juce::Rectangle<float> paintArea)
 {
     g.setColour(juce::Colours::magenta);
-    g.fillRect(bounds.withX(position * paintArea.getWidth()).translated(paintArea.getX(), paintArea.getY()));
+    auto w = paintArea.getWidth() - bounds.getWidth();
+    g.fillRect(bounds.withX(position * w).translated(paintArea.getX(), paintArea.getY()));
 }
