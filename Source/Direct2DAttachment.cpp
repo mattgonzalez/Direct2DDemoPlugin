@@ -131,7 +131,7 @@ void Direct2DAttachment::paintImmediately()
     {
         juce::Graphics g{ *direct2DLowLevelGraphicsContext };
 
-        direct2DLowLevelGraphicsContext->start();
+        direct2DLowLevelGraphicsContext->startSync();
 
         JUCE_TRY
         {
@@ -155,7 +155,7 @@ void Direct2DAttachment::paintImmediately()
         }
         JUCE_CATCH_EXCEPTION;
 
-        direct2DLowLevelGraphicsContext->end();
+        direct2DLowLevelGraphicsContext->endSync();
 
         auto endTime = juce::Time::getHighResolutionTicks();
         auto duration = endTime - startTime;
@@ -178,7 +178,7 @@ void Direct2DAttachment::handleResize()
 
         if (direct2DLowLevelGraphicsContext)
         {
-            direct2DLowLevelGraphicsContext->resized();
+            direct2DLowLevelGraphicsContext->resize();
         }
     }
 

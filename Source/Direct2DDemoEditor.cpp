@@ -222,7 +222,7 @@ void Direct2DDemoEditor::paintWmPaintCount(juce::Graphics& g, juce::Rectangle<in
 
 void Direct2DDemoEditor::paintStats(juce::Graphics& g)
 {
-#if JUCE_DIRECT2D
+#if JUCE_DIRECT2D && JUCE_DIRECT2D_METRICS
     g.setFont(15.0f);
     g.setColour(juce::Colours::white);
 
@@ -282,7 +282,7 @@ void Direct2DDemoEditor::valueTreePropertyChanged(juce::ValueTree& treeWhoseProp
 
 void Direct2DDemoEditor::resetStats()
 {
-#if JUCE_DIRECT2D
+#if JUCE_DIRECT2D && JUCE_DIRECT2D_METRICS
     if (auto peer = getPeer())
     {
         peer->resetStats();
