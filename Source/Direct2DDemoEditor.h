@@ -26,11 +26,9 @@ SOFTWARE.
 
 #include <JuceHeader.h>
 #include "Direct2DDemoProcessor.h"
-#include "Direct2DAttachment.h"
 #include "SettingsComponent.h"
 #include "TimingSource.h"
 #include "SpectrumRingDisplay.h"
-#include "ThreadMessageQueue.h"
 
 class Direct2DDemoEditor : public juce::AudioProcessorEditor,
     public juce::ValueTree::Listener
@@ -50,8 +48,6 @@ public:
 
 private:
     Direct2DDemoProcessor& audioProcessor;
-    Direct2DAttachment d2dAttachment;
-    ThreadMessageQueue threadMessages;
     TimingSource timingSource;
     SettingsComponent settingsComponent;
     std::unique_ptr<SpectrumRingDisplay> painter;

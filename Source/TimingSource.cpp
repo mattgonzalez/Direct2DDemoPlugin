@@ -25,11 +25,8 @@ SOFTWARE.
 #include "TimingSource.h"
 #include "Direct2DDemoEditor.h"
 
-TimingSource::TimingSource(juce::Component* const component_, juce::WaitableEvent& audioInputEvent_, ThreadMessageQueue& threadMessages_) :
-    Thread("TimingSource"),
-    component(component_),
-    audioInputEvent(audioInputEvent_),
-    threadMessages(threadMessages_)
+TimingSource::TimingSource(juce::Component* const component_) :
+    component(component_)
 {
 }
 
@@ -54,12 +51,6 @@ void TimingSource::setMode(int renderMode)
         vblankAttachment = std::make_unique<juce::VBlankAttachment>(component, [this]() { onVBlank(); });
         break;
     }
-
-    case RenderMode::dedicatedThreadDirect2D:
-    {
-        startThread(juce::Thread::Priority::normal);
-        break;
-    }
     }
 }
 
@@ -70,16 +61,6 @@ void TimingSource::resetStats()
     nextPaintTicks = juce::Time::getHighResolutionTicks() + ticksPerFrame;
 
     measuredTimerIntervalSeconds.reset();
-}
-
-void TimingSource::run()
-{
-    while (false == threadShouldExit())
-    {
-        audioInputEvent.wait(100);
-
-        servicePaintTimer();
-    }
 }
 
 void TimingSource::onVBlank()
@@ -121,15 +102,9 @@ void TimingSource::servicePaintTimer()
     }
 
     lastTimerTicks = now;
-
-    //
-    // Service the thread message queue
-    //
-    threadMessages.dispatchNextMessage();
 }
 
 void TimingSource::stopAllTimers()
 {
     vblankAttachment = nullptr;
-    stopThread(1000);
 }

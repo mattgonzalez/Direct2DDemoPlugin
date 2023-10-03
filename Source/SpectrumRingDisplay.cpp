@@ -24,9 +24,8 @@ SOFTWARE.
 
 #include "SpectrumRingDisplay.h"
 
-SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_) :
-    audioProcessor(processor_),
-    direct2DAttachment(direct2DAttachment_)
+SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_) :
+    audioProcessor(processor_)
 {
 }
 

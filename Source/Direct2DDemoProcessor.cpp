@@ -99,11 +99,6 @@ void Direct2DDemoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     {
         processFFT();
     }
-
-    //
-    // Notify the editor to paint
-    //
-    readyEvent.signal();
 }
 
 void Direct2DDemoProcessor::processFFT()

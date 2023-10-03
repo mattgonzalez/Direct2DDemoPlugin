@@ -12,10 +12,6 @@
     <GROUP id="{AF67DE6E-462D-758A-F6BA-2BD11FE946BA}" name="Source">
       <GROUP id="{0FDA1418-E094-30AF-1993-392C2BC44D86}" name="Editor">
         <FILE id="izTnvr" name="d2d.png" compile="0" resource="1" file="Source/d2d.png"/>
-        <FILE id="gH8DlC" name="Direct2DAttachment.cpp" compile="1" resource="0"
-              file="Source/Direct2DAttachment.cpp"/>
-        <FILE id="H7baNd" name="Direct2DAttachment.h" compile="0" resource="0"
-              file="Source/Direct2DAttachment.h"/>
         <FILE id="YECgo8" name="Direct2DDemoEditor.cpp" compile="1" resource="0"
               file="Source/Direct2DDemoEditor.cpp"/>
         <FILE id="MBXWPh" name="Direct2DDemoEditor.h" compile="0" resource="0"
@@ -24,10 +20,6 @@
               file="Source/SpectrumRingDisplay.cpp"/>
         <FILE id="FVpAtB" name="SpectrumRingDisplay.h" compile="0" resource="0"
               file="Source/SpectrumRingDisplay.h"/>
-        <FILE id="kpagmZ" name="ThreadMessageQueue.cpp" compile="1" resource="0"
-              file="Source/ThreadMessageQueue.cpp"/>
-        <FILE id="MYzIdD" name="ThreadMessageQueue.h" compile="0" resource="0"
-              file="Source/ThreadMessageQueue.h"/>
         <FILE id="O4CABj" name="SettingsComponent.cpp" compile="1" resource="0"
               file="Source/SettingsComponent.cpp"/>
         <FILE id="jYMbAa" name="SettingsComponent.h" compile="0" resource="0"
@@ -62,7 +54,7 @@
     <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="izTnvr" bigIcon="izTnvr">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="Direct2DDemoPluginDebug"
-                       defines="JUCE_DIRECT2D=1&#10;JUCE_WAIT_FOR_VBLANK=1&#10;JUCE_DIRECT2D_PARTIAL_REPAINT=1&#10;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING=1"/>
+                       defines="JUCE_DIRECT2D=1&#10;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING=1"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="Direct2DDemoPlugin" defines="JUCE_DIRECT2D=1&#10;JUCE_WAIT_FOR_VBLANK=1&#10;JUCE_DIRECT2D_PARTIAL_REPAINT=1&#10;_SILENCE_CXX23_ALIGNED_STORAGE_DEPRECATION_WARNING=1"
                        useRuntimeLibDLL="0"/>
       </CONFIGURATIONS>

@@ -28,9 +28,7 @@ SOFTWARE.
 Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
     : AudioProcessorEditor(&p),
     audioProcessor(p),
-    d2dAttachment(this),
-    threadMessages(d2dAttachment.getLock()),
-    timingSource(this, audioProcessor.readyEvent, threadMessages),
+    timingSource(this),
     settingsComponent(p)
 {
     setResizable(true, false);
@@ -43,7 +41,7 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
 
     audioProcessor.state.state.addListener(this);
 
-    painter = std::make_unique<SpectrumRingDisplay>(p, d2dAttachment);
+    painter = std::make_unique<SpectrumRingDisplay>(p);
 
     timingSource.onPaintTimer = [this]() { paintTimerCallback(); };
 
@@ -60,21 +58,7 @@ Direct2DDemoEditor::~Direct2DDemoEditor()
 
 void Direct2DDemoEditor::paintTimerCallback()
 {
-    //
-    // Just got notified by the timing source that it's time to paint
-    // 
-    // For software mode, just call repaint and then paint on WM_PAINT
-    //
-    if (RenderMode::software == audioProcessor.parameters.renderer)
-    {
-        repaint();
-        return;
-    }
-
-    //
-    // For Direct2D, go ahead and paint right now
-    //
-    d2dAttachment.paintImmediately();
+    repaint();
 }
 
 void Direct2DDemoEditor::paint(juce::Graphics& g)
@@ -112,7 +96,6 @@ void Direct2DDemoEditor::paintModeText(juce::Graphics& g)
         break;
 
     case RenderMode::vblankAttachmentDirect2D:
-    case RenderMode::dedicatedThreadDirect2D:
         text = "Direct2D ";
         break;
     }
@@ -254,8 +237,6 @@ void Direct2DDemoEditor::paintStats(juce::Graphics& g)
 
 void Direct2DDemoEditor::resized()
 {
-    d2dAttachment.paintImmediately();
-
     settingsComponent.setBounds(getWidth() - 30, getHeight() - 30, 500, 200);
     settingsComponent.cornerBounds = settingsComponent.getBounds();
 }
@@ -300,11 +281,8 @@ void Direct2DDemoEditor::updateFrameRate()
     //
     if (auto framesPerSecond = audioProcessor.parameters.frameRate.get(); framesPerSecond > 0.0)
     {
-        threadMessages.postMessage([this, framesPerSecond]()
-            {
-                timingSource.setFrameRate(framesPerSecond);
-                resetStats();
-            });
+        timingSource.setFrameRate(framesPerSecond);
+        resetStats();
     }
 }
 
@@ -318,29 +296,12 @@ void Direct2DDemoEditor::updateRenderer()
     //
     // Detach Direct2D
     //
-    d2dAttachment.detach();
-
     resetStats();
 
     int renderMode = audioProcessor.parameters.renderer;
-    switch (renderMode)
+    if (auto peer = getPeer())
     {
-    case RenderMode::software:
-    {
-        //
-        // Nothing to do; the window is already in software render mode
-        //
-        break;
-    }
-
-    case RenderMode::vblankAttachmentDirect2D:
-    case RenderMode::dedicatedThreadDirect2D:
-    {
-        //
-        // Attach Direct2D
-        //
-        d2dAttachment.attach();
-    }
+        peer->setCurrentRenderingEngine((renderMode == RenderMode::software) ? 0 : 1);
     }
 
     updateFrameRate();

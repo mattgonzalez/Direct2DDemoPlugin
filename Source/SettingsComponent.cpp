@@ -43,10 +43,9 @@ SettingsComponent::SettingsComponent(Direct2DDemoProcessor& processor_) :
         juce::StringArray strings
     {
             "JUCE software renderer", 
-            "Direct2D from VBlankAttachment callback", 
-            "Direct2D from dedicated thread" 
+            "Direct2D from VBlankAttachment callback"
         };
-        juce::Array<juce::var> values{ RenderMode::software, RenderMode::vblankAttachmentDirect2D, RenderMode::dedicatedThreadDirect2D };
+        juce::Array<juce::var> values{ RenderMode::software, RenderMode::vblankAttachmentDirect2D };
 
         auto c = std::make_unique<juce::ChoicePropertyComponent>(parameters.renderer.getPropertyAsValue(),
             "Render mode",

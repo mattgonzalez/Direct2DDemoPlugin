@@ -32,8 +32,7 @@ SOFTWARE.
 enum RenderMode
 {
     software = 0,
-    vblankAttachmentDirect2D,
-    dedicatedThreadDirect2D
+    vblankAttachmentDirect2D
 }; 
 
 class Direct2DDemoProcessor : public juce::AudioProcessor
@@ -83,7 +82,6 @@ public:
     int const fftOrder = 10;
     int fftOverlapSkipSamples = 0;
     double fftHertzPerBin = 0.0;
-    juce::WaitableEvent readyEvent;
     AudioFIFO inputFIFO;
     ProcessorOutputFIFO outputFIFO;
 

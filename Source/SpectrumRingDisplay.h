@@ -26,19 +26,17 @@ SOFTWARE.
 
 #include <JuceHeader.h>
 #include "Direct2DDemoProcessor.h"
-#include "Direct2DAttachment.h"
 
 class SpectrumRingDisplay
 {
 public:
-    SpectrumRingDisplay(Direct2DDemoProcessor& processor_, Direct2DAttachment& direct2DAttachment_);
+    SpectrumRingDisplay(Direct2DDemoProcessor& processor_);
     ~SpectrumRingDisplay() = default;
 
     void paint(juce::Graphics& g, juce::Rectangle<float> bounds, ProcessorOutput const * const processorOutput);
 
 protected:
     Direct2DDemoProcessor& audioProcessor;
-    Direct2DAttachment& direct2DAttachment;
     
     juce::OwnedArray<juce::Path> segmentPaths;
     juce::Rectangle<float> ringBounds;
