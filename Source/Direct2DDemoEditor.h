@@ -48,6 +48,7 @@ public:
 
 private:
     Direct2DDemoProcessor& audioProcessor;
+    std::unique_ptr<juce::OpenGLContext> openGLContext;
     TimingSource timingSource;
     SettingsComponent settingsComponent;
     std::unique_ptr<SpectrumRingDisplay> painter;

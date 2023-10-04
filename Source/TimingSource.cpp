@@ -47,6 +47,7 @@ void TimingSource::setMode(int renderMode)
     {
     case RenderMode::software:
     case RenderMode::vblankAttachmentDirect2D:
+    case RenderMode::openGL:
     {
         vblankAttachment = std::make_unique<juce::VBlankAttachment>(component, [this]() { onVBlank(); });
         break;

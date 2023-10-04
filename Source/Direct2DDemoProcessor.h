@@ -32,7 +32,8 @@ SOFTWARE.
 enum RenderMode
 {
     software = 0,
-    vblankAttachmentDirect2D
+    vblankAttachmentDirect2D,
+    openGL
 }; 
 
 class Direct2DDemoProcessor : public juce::AudioProcessor

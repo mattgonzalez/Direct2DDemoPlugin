@@ -98,6 +98,10 @@ void Direct2DDemoEditor::paintModeText(juce::Graphics& g)
     case RenderMode::vblankAttachmentDirect2D:
         text = "Direct2D ";
         break;
+
+    case RenderMode::openGL:
+        text = "OpenGL ";
+        break;
     }
 
     text << getWidth() << "x" << getHeight();
@@ -293,15 +297,32 @@ void Direct2DDemoEditor::updateRenderer()
     //
     timingSource.stopAllTimers();
 
-    //
-    // Detach Direct2D
-    //
     resetStats();
 
+    openGLContext = nullptr;
+
     int renderMode = audioProcessor.parameters.renderer;
+    int renderingEngine = 0;
     if (auto peer = getPeer())
     {
-        peer->setCurrentRenderingEngine((renderMode == RenderMode::software) ? 0 : 1);
+        switch (renderMode)
+        {
+        case RenderMode::software:
+        case RenderMode::openGL:
+            break;
+
+        case RenderMode::vblankAttachmentDirect2D:
+            renderingEngine = 1;
+            break;
+        }
+
+        peer->setCurrentRenderingEngine(renderingEngine);
+
+        if (renderMode == RenderMode::openGL)
+        {
+            openGLContext = std::make_unique<juce::OpenGLContext>();
+            openGLContext->attachTo(*this);
+        }
     }
 
     updateFrameRate();

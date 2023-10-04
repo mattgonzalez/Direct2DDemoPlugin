@@ -43,9 +43,10 @@ SettingsComponent::SettingsComponent(Direct2DDemoProcessor& processor_) :
         juce::StringArray strings
     {
             "JUCE software renderer", 
-            "Direct2D from VBlankAttachment callback"
+            "Direct2D from VBlankAttachment callback",
+            "OpenGL"
         };
-        juce::Array<juce::var> values{ RenderMode::software, RenderMode::vblankAttachmentDirect2D };
+        juce::Array<juce::var> values{ RenderMode::software, RenderMode::vblankAttachmentDirect2D, RenderMode::openGL };
 
         auto c = std::make_unique<juce::ChoicePropertyComponent>(parameters.renderer.getPropertyAsValue(),
             "Render mode",
