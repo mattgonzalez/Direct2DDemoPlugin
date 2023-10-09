@@ -33,17 +33,44 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
 {
     setResizable(true, false);
 
-    int width = 1000;
-    int height = 1000;
-    setSize(width, height);
-
-    addAndMakeVisible(settingsComponent);
-
     audioProcessor.state.state.addListener(this);
 
     painter = std::make_unique<SpectrumRingDisplay>(p);
 
+#if 1
+    {
+        auto childWindow = std::make_unique<ChildWindow>(ChildWindow::Mode::openGL);
+        addAndMakeVisible(childWindow.get());
+        childWindow->setName("Child A");
+        childWindows.add(std::move(childWindow));
+    }
+#endif
+
+#if 1
+    {
+        auto childWindow = std::make_unique<ChildWindow>(ChildWindow::Mode::gdi);
+        addAndMakeVisible(childWindow.get());
+        childWindow->setName("Child B");
+        childWindows.add(std::move(childWindow));
+    }
+#endif
+
+#if 1 //JUCE_DIRECT2D
+    {
+        auto childWindow = std::make_unique<ChildWindow>(ChildWindow::Mode::direct2D);
+        addAndMakeVisible(childWindow.get());
+        childWindow->setName("Child C");
+        childWindows.add(std::move(childWindow));
+    }
+#endif
+
     timingSource.onPaintTimer = [this]() { paintTimerCallback(); };
+
+    addAndMakeVisible(settingsComponent);
+
+    int width = 1000;
+    int height = 1000;
+    setSize(width, height);
 
     updateFrameRate();
     updateRenderer();
@@ -59,6 +86,11 @@ Direct2DDemoEditor::~Direct2DDemoEditor()
 void Direct2DDemoEditor::paintTimerCallback()
 {
     repaint();
+
+    for (auto childWindow : childWindows)
+    {
+        childWindow->inner.repaint();
+    }
 }
 
 void Direct2DDemoEditor::paint(juce::Graphics& g)
@@ -78,7 +110,7 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
 
     g.fillAll(juce::Colours::black);
 
-    painter->paint(g, getLocalBounds().toFloat(), audioProcessor.outputFIFO.getMostRecent());
+    //painter->paint(g, getLocalBounds().toFloat(), audioProcessor.outputFIFO.getMostRecent());
 
     paintModeText(g);
     paintStats(g);
@@ -239,6 +271,15 @@ void Direct2DDemoEditor::resized()
 {
     settingsComponent.setBounds(getWidth() - 30, getHeight() - 30, 500, 200);
     settingsComponent.cornerBounds = settingsComponent.getBounds();
+
+    juce::BorderSize borders{ 50 };
+    juce::Rectangle<int> r = borders.subtractedFrom(getLocalBounds());
+    r.setHeight(r.proportionOfHeight(0.25f));
+    for (auto childWindow : childWindows)
+    {
+        childWindow->setBounds(r);
+        r.translate(0, r.getHeight());
+    }
 }
 
 void Direct2DDemoEditor::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
