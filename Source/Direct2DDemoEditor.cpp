@@ -31,36 +31,39 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
     timingSource(this),
     settingsComponent(p)
 {
+    setName("Direct2DDemoEditor");
+
     setResizable(true, false);
 
     audioProcessor.state.state.addListener(this);
 
-    painter = std::make_unique<SpectrumRingDisplay>(p);
+    //painter = std::make_unique<SpectrumRingDisplay>(p);
 
 #if 1
     {
-        auto childWindow = std::make_unique<ChildWindow>(ChildWindow::Mode::openGL);
-        addAndMakeVisible(childWindow.get());
-        childWindow->setName("Child A");
-        childWindows.add(std::move(childWindow));
+        auto window = std::make_unique<OwnedWindow>(p, OwnedWindow::Mode::softwareRenderer);
+        addAndMakeVisible(window.get());
+        window->setName("Child A");
+        ownedWindows.add(std::move(window));
     }
 #endif
 
-#if 1
+#if JUCE_DIRECT2D
     {
-        auto childWindow = std::make_unique<ChildWindow>(ChildWindow::Mode::gdi);
-        addAndMakeVisible(childWindow.get());
-        childWindow->setName("Child B");
-        childWindows.add(std::move(childWindow));
+        auto window = std::make_unique<OwnedWindow>(p, OwnedWindow::Mode::direct2D);
+        addAndMakeVisible(window.get());
+        window->setName("Child B");
+        ownedWindows.add(std::move(window));
     }
 #endif
 
-#if 1 //JUCE_DIRECT2D
+#if JUCE_OPENGL
     {
-        auto childWindow = std::make_unique<ChildWindow>(ChildWindow::Mode::direct2D);
-        addAndMakeVisible(childWindow.get());
-        childWindow->setName("Child C");
-        childWindows.add(std::move(childWindow));
+        auto window = std::make_unique<OwnedWindow>(p, OwnedWindow::Mode::openGL);
+
+        addAndMakeVisible(window.get());
+        window->setName("Child C");
+        ownedWindows.add(std::move(window));
     }
 #endif
 
@@ -87,17 +90,9 @@ void Direct2DDemoEditor::paintTimerCallback()
 {
     repaint();
 
-    for (auto childWindow : childWindows)
+    for (auto window : ownedWindows)
     {
-        childWindow->inner.repaint();
-    }
-}
-
-void Direct2DDemoEditor::paint(juce::Graphics& g)
-{
-    if (getWidth() <= 0)
-    {
-        return;
+        window->inner.repaint();
     }
 
     //
@@ -106,6 +101,14 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
     if (audioProcessor.outputFIFO.getNumItemsStored() > 0)
     {
         audioProcessor.outputFIFO.advanceReadPosition();
+    }
+}
+
+void Direct2DDemoEditor::paint(juce::Graphics& g)
+{
+    if (getWidth() <= 0)
+    {
+        return;
     }
 
     g.fillAll(juce::Colours::black);
@@ -153,11 +156,13 @@ static void paintStat(juce::Graphics& g, juce::Rectangle<int> const r, juce::Str
     as.draw(g, r.toFloat());
 }
 
+#if JUCE_DIRECT2D_METRICS
 static void paintStat(juce::Graphics& g, juce::Rectangle<int> const r, juce::String name, juce::StatisticsAccumulator<double> const& stats)
 {
     name << juce::String{ stats.getAverage() * 1000.0, 1 } << " avg / " << juce::String{ stats.getStandardDeviation() * 1000.0, 1 } << " std.dev.";
     g.drawText(name, r, juce::Justification::centredLeft);
 }
+#endif
 
 void Direct2DDemoEditor::paintFrameIntervalStats(juce::Graphics& g, juce::Rectangle<int>& r, juce::StatisticsAccumulator<double> const& frameIntervalSeconds)
 {
@@ -235,7 +240,7 @@ void Direct2DDemoEditor::paintWmPaintCount(juce::Graphics& g, juce::Rectangle<in
     r.translate(0, r.getHeight());
 }
 
-void Direct2DDemoEditor::paintStats(juce::Graphics& g)
+void Direct2DDemoEditor::paintStats(juce::Graphics& /*g*/)
 {
 #if JUCE_DIRECT2D && JUCE_DIRECT2D_METRICS
     g.setFont(15.0f);
@@ -275,10 +280,10 @@ void Direct2DDemoEditor::resized()
     juce::BorderSize borders{ 50 };
     juce::Rectangle<int> r = borders.subtractedFrom(getLocalBounds());
     r.setHeight(r.proportionOfHeight(0.25f));
-    for (auto childWindow : childWindows)
+    for (auto window : ownedWindows)
     {
-        childWindow->setBounds(r);
-        r.translate(0, r.getHeight());
+        window->setBounds(r);
+        r.translate(0, r.getHeight() + 10);
     }
 }
 
