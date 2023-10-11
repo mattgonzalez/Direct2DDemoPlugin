@@ -31,6 +31,11 @@ SpectrumRingDisplay::SpectrumRingDisplay(Direct2DDemoProcessor& processor_) :
 
 void SpectrumRingDisplay::paint(juce::Graphics& g, juce::Rectangle<float> bounds, ProcessorOutput const* const processorOutput)
 {
+    if (!processorOutput)
+    {
+        return;
+    }
+
     auto const& averageSpectrum = processorOutput->averageSpectrum;
 
     //
