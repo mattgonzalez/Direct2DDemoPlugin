@@ -97,6 +97,9 @@ public:
 private:
     juce::dsp::FFT fft;
     float fftNormalizationScale = 1.0f;
+    double toneFrequency = 20.0;
+    double frequencyMultiplier = 1.02;
+    juce::ToneGeneratorAudioSource tone;
     juce::dsp::WindowingFunction<float> fftWindow;
     juce::AudioBuffer<float> fftWorkBuffer;
     RealSpectrum<float> averagingSpectrum;

@@ -53,7 +53,7 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
 #endif
 }
 
-void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int /*samplesPerBlock*/)
+void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int samplesPerBlock)
 {
     sampleRate = sampleRate_;
     fftHertzPerBin = sampleRate_ / fft.getSize();
@@ -71,6 +71,10 @@ void Direct2DDemoProcessor::prepareToPlay(double sampleRate_, int /*samplesPerBl
 
     averagingSpectrum = RealSpectrum<float>{}.withChannels(2).withFFTSize(fft.getSize());
     averagingSpectrum.clear();
+
+    tone.setAmplitude(1.0f);
+    tone.setFrequency(toneFrequency);
+    tone.prepareToPlay(samplesPerBlock, sampleRate_);
 }
 
 void Direct2DDemoProcessor::releaseResources()
@@ -90,6 +94,19 @@ bool Direct2DDemoProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 void Direct2DDemoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& /*midiMessages*/)
 {
     juce::ScopedNoDenormals noDenormals;
+
+    juce::AudioSourceChannelInfo asci{ buffer };
+    tone.getNextAudioBlock(asci);
+    toneFrequency *= frequencyMultiplier;
+    if (toneFrequency <= 20.0)
+    {
+        frequencyMultiplier = 1.02;
+    }
+    if (toneFrequency >= 1000.0)
+    {
+        frequencyMultiplier = 0.98;
+    }
+    tone.setFrequency(toneFrequency);
 
     //
     // Store samples in the FIFO and run the FFT if there's enough data
