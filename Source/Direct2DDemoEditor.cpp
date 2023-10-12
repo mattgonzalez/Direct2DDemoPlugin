@@ -69,10 +69,15 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
 
     timingSource.onPaintTimer = [this]() { paintTimerCallback(); };
 
-    addAndMakeVisible(settingsComponent);
+    //addAndMakeVisible(settingsComponent);
 
     int width = 1000;
     int height = 1000;
+    if (0 == ownedWindows.size())
+    {
+        width = 1400;
+        height = 500;
+    }
     setSize(width, height);
 
     updateFrameRate();
@@ -115,8 +120,29 @@ void Direct2DDemoEditor::paint(juce::Graphics& g)
 
     //painter->paint(g, getLocalBounds().toFloat(), audioProcessor.outputFIFO.getMostRecent());
 
+    paintSpectrum(g);
     paintModeText(g);
     paintStats(g);
+}
+
+void Direct2DDemoEditor::paintSpectrum(juce::Graphics& g)
+{
+    if (auto output = audioProcessor.outputFIFO.getMostRecent())
+    {
+        auto area = getLocalBounds();
+        if (auto firstOwnedWindow = ownedWindows.getFirst())
+        {
+            area = firstOwnedWindow->getBounds();
+            area.translate(0, -area.getHeight() - 10);
+        }
+
+        g.setColour(juce::Colour::greyLevel(0.1f));
+        g.fillRect(area);
+
+        juce::Graphics::ScopedSaveState saveState{ g };
+
+        OwnedWindow::paintSpectrum(g, area.toFloat(), "Editor", "Editor paint()", output->averageSpectrum);
+    }
 }
 
 void Direct2DDemoEditor::paintModeText(juce::Graphics& g)
@@ -283,7 +309,8 @@ void Direct2DDemoEditor::resized()
 
     juce::BorderSize borders{ 50 };
     juce::Rectangle<int> r = borders.subtractedFrom(getLocalBounds());
-    r.setHeight(r.proportionOfHeight(0.25f));
+    r.setHeight(r.proportionOfHeight(0.8f / (float)(ownedWindows.size() + 1)));
+    r.translate(0, r.getHeight() + 40);
     for (auto window : ownedWindows)
     {
         window->setBounds(r);
@@ -345,7 +372,9 @@ void Direct2DDemoEditor::updateRenderer()
 
     resetStats();
 
+#if JUCE_OPENGL
     openGLContext = nullptr;
+#endif
 
     int renderMode = audioProcessor.parameters.renderer;
     int renderingEngine = 0;
@@ -364,11 +393,13 @@ void Direct2DDemoEditor::updateRenderer()
 
         peer->setCurrentRenderingEngine(renderingEngine);
 
+#if JUCE_OPENGL
         if (renderMode == RenderMode::openGL)
         {
             openGLContext = std::make_unique<juce::OpenGLContext>();
             openGLContext->attachTo(*this);
         }
+#endif
     }
 
     updateFrameRate();

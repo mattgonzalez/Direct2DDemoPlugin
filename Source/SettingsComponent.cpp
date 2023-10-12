@@ -42,7 +42,7 @@ SettingsComponent::SettingsComponent(Direct2DDemoProcessor& processor_) :
     {
         juce::StringArray strings
         {
-            "JUCE software renderer", 
+            "JUCE software renderer"
         #if JUCE_DIRECT2D
             ,"Direct2D from VBlankAttachment callback"
         #endif

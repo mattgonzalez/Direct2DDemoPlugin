@@ -37,7 +37,7 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
                 60.0f),
             std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{ rendererID, 1 }, "Render mode",
                 juce::StringArray{ "Software renderer", "Direct2D from VBlankAttachment callback", "Direct2D from dedicated thread" },
-                RenderMode::software)
+                RenderMode::vblankAttachmentDirect2D)
         }),
     parameters(this, state.state),
     fft(fftOrder),
@@ -95,18 +95,18 @@ void Direct2DDemoProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 {
     juce::ScopedNoDenormals noDenormals;
 
-    juce::AudioSourceChannelInfo asci{ buffer };
-    tone.getNextAudioBlock(asci);
-    toneFrequency *= frequencyMultiplier;
-    if (toneFrequency <= 20.0)
-    {
-        frequencyMultiplier = 1.02;
-    }
-    if (toneFrequency >= 1000.0)
-    {
-        frequencyMultiplier = 0.98;
-    }
-    tone.setFrequency(toneFrequency);
+//     juce::AudioSourceChannelInfo asci{ buffer };
+//     tone.getNextAudioBlock(asci);
+//     toneFrequency *= frequencyMultiplier;
+//     if (toneFrequency <= 20.0)
+//     {
+//         frequencyMultiplier = 1.02;
+//     }
+//     if (toneFrequency >= 1000.0)
+//     {
+//         frequencyMultiplier = 0.98;
+//     }
+//     tone.setFrequency(toneFrequency);
 
     //
     // Store samples in the FIFO and run the FFT if there's enough data

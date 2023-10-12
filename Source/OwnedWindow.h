@@ -39,14 +39,18 @@ public:
         processor(processor_),
         mode(mode_)
     {
+        inner.addToDesktop(juce::ComponentPeer::windowIsOwned, nullptr);
+        inner.setVisible(true);
     }
 
     ~OwnedWindow() override
     {
+#if JUCE_OPENGL
         if (glContext)
         {
             glContext->detach();
         }
+#endif
     }
 
     void parentHierarchyChanged() override
@@ -58,9 +62,6 @@ public:
             case Mode::softwareRenderer:
             case Mode::direct2D:
             {
-                inner.addToDesktop(juce::ComponentPeer::windowIsOwned, ancestorPeer->getNativeHandle());
-                inner.setVisible(true);
-
                 if (auto* innerPeer = inner.getPeer())
                 {
                     innerPeer->setCurrentRenderingEngine((int)mode);
@@ -69,6 +70,7 @@ public:
                 break;
             }
 
+#if JUCE_OPENGL
             case Mode::openGL:
             {
                 addAndMakeVisible(inner);
@@ -79,13 +81,14 @@ public:
                 glContext->attachTo(*this);
                 break;
             }
+#endif
             }
 
             resized();
         }
     }
 
-    void paint(juce::Graphics&g) override
+    void paint(juce::Graphics& g) override
     {
         g.fillAll(juce::Colours::black);
         g.setColour(juce::Colours::white);
@@ -94,11 +97,13 @@ public:
 
     void resized() override
     {
+#if JUCE_OPENGL
         if (glContext)
         {
             inner.setBounds(getLocalBounds());
         }
         else
+#endif
         {
             updateHWNDBounds();
         }
@@ -107,48 +112,63 @@ public:
     Direct2DDemoProcessor& processor;
     Mode const mode;
 
-    static void paintSpectrum(juce::Graphics& g, juce::Rectangle<float> area, double phase, juce::StringRef text, RealSpectrum<float> const& spectrum)
+    static void paintSpectrum(juce::Graphics& g, juce::Rectangle<float> area, juce::StringRef bigText, juce::StringRef smallText, RealSpectrum<float> const& spectrum)
     {
-        juce::ColourGradient gradient{ juce::Colours::black,
-            0.0f, 0.0f,
-            juce::Colours::black,
-            area.getWidth(), 0.0f, false };
-        gradient.addColour(0.5f + 0.5f * (float)std::sin(phase), juce::Colour::greyLevel(0.1f));
-        g.setGradientFill(gradient);
+        g.setColour(juce::Colours::white);
+        g.setFont(20.0f);
+        g.drawText(smallText, area, juce::Justification::topLeft);
 
-        g.setFont(area.getHeight() * 0.8f);
-        g.drawText(text, area, juce::Justification::centredLeft);
+        g.setColour(juce::Colours::black);
+        g.setFont(area.getHeight() * 0.6f);
+        g.drawText(bigText, area, juce::Justification::centredLeft);
 
-        int numBins = spectrum.getNumBins();
+        int numBins = juce::roundToInt(spectrum.getNumBins() * 0.4);
         float pixelsPerBin = area.getWidth() / numBins;
-        float maxBarHeight = area.getHeight() / 2;
-        float y = 0.0f;
+        float barBottom = area.getHeight() * 0.9f + area.getY();
+        float maxBarHeight = area.getHeight() * 0.6f;
+        float y = barBottom - maxBarHeight;
         juce::Range<float> decibelRange{ -100.0f, 0.0f };
         float yScale = maxBarHeight / decibelRange.getLength();
         juce::RectangleList<int> bars;
-        for (int channel = 0; channel < 2; ++channel)
-        {
-            int bin = 0;
-            float x = 0.0f;
-            while (x < area.getWidth() && bin < spectrum.getNumBins())
-            {
-                auto value = spectrum.getBinValue(channel, bin);
-                auto mag = juce::Decibels::gainToDecibels(std::abs(value));
-                float h = (mag - decibelRange.getStart()) * yScale;
-                bars.add(juce::Rectangle<float>{ x, y + maxBarHeight - h, pixelsPerBin, h }.getSmallestIntegerContainer());
-                ++bin;
-                x += pixelsPerBin;
-            }
 
-            y += maxBarHeight;
+        if (spectrum.getNumChannels() <= 0)
+        {
+            return;
+        }
+
+        float const numChannelsInverse = 1.0f / (float)spectrum.getNumChannels();
+        int bin = 0;
+        float x = 0.0f;
+        while (x < area.getWidth() && bin < numBins)
+        {
+            float value = 0.0f;
+            for (int channel = 0; channel < spectrum.getNumChannels(); ++channel)
+            {
+                value += spectrum.getBinValue(channel, bin);
+            }
+            auto mag = juce::Decibels::gainToDecibels(std::abs(value) * numChannelsInverse);
+
+            float h = (mag - decibelRange.getStart()) * yScale;
+            bars.add(juce::Rectangle<float>{ x, y + maxBarHeight - h, pixelsPerBin, h }.getSmallestIntegerContainer());
+
+            ++bin;
+            x += pixelsPerBin;
         }
 
         g.reduceClipRegion(bars);
-        g.setColour(juce::Colours::white);
-        g.drawText(text, area, juce::Justification::centredLeft);
+        g.setColour(juce::Colours::magenta);
+        juce::ColourGradient gradient{ juce::Colours::cyan,
+            0.0f, area.getBottom(),
+            juce::Colours::magenta,
+            0.0f, area.getY(), false };
+        g.setGradientFill(gradient);
+        g.drawText(bigText, area, juce::Justification::centredLeft);
     }
 
+#if JUCE_OPENGL
     std::unique_ptr<juce::OpenGLContext> glContext;
+#endif
+
     struct Inner : public Component
     {
         Inner(OwnedWindow& ownedWindow_) :
@@ -156,13 +176,13 @@ public:
         {
             setOpaque(false);
         }
-    
-        void paint(juce::Graphics& g) override 
+
+        void paint(juce::Graphics& g) override
         {
-            auto ticks = juce::Time::getHighResolutionTicks();
-            auto elapsed = juce::Time::highResolutionTicksToSeconds(ticks - lastPaintTicks);
-            lastPaintTicks = ticks;
-            phase.advance(juce::MathConstants<double>::twoPi * animationPeriodSeconds * elapsed);
+            //             auto ticks = juce::Time::getHighResolutionTicks();
+            //             auto elapsed = juce::Time::highResolutionTicksToSeconds(ticks - lastPaintTicks);
+            //             lastPaintTicks = ticks;
+            //             phase.advance(juce::MathConstants<double>::twoPi * animationPeriodSeconds * elapsed);
 
             g.fillAll(juce::Colour::greyLevel(0.1f));
             g.setColour(juce::Colours::cyan);
@@ -171,30 +191,22 @@ public:
             if (auto peer = getPeer())
             {
                 juce::String text{ getPeer()->getCurrentRenderingEngine() > 0 ? "Direct2D" : "Software" };
+#if JUCE_OPENGL
                 if (ownedWindow.glContext)
                 {
                     text = "OpenGL";
                 }
+#endif
                 if (auto output = ownedWindow.processor.outputFIFO.getMostRecent())
                 {
-                    paintSpectrum(g, getLocalBounds().toFloat(), phase.phase, text, output->averageSpectrum);
+                    paintSpectrum(g, getLocalBounds().toFloat(), text, "Owned window", output->averageSpectrum);
                 }
             }
-
-
-#if 0
-
-
-            g.fillAll(juce::Colours::grey.withAlpha(0.5f));
-            g.setColour(juce::Colours::cyan);
-            g.drawRect(getLocalBounds());
-
-#endif
         }
 
         OwnedWindow& ownedWindow;
-        juce::dsp::Phase<double> phase;
-        int64_t lastPaintTicks = juce::Time::getHighResolutionTicks();
-        static constexpr double animationPeriodSeconds = 0.2;
+        //juce::dsp::Phase<double> phase;
+        //int64_t lastPaintTicks = juce::Time::getHighResolutionTicks();
+        //static constexpr double animationPeriodSeconds = 0.2;
     } inner;
 };

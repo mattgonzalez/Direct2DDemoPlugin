@@ -49,7 +49,9 @@ public:
 
 private:
     Direct2DDemoProcessor& audioProcessor;
+#if JUCE_OPENGL
     std::unique_ptr<juce::OpenGLContext> openGLContext;
+#endif
     TimingSource timingSource;
     SettingsComponent settingsComponent;
     std::unique_ptr<SpectrumRingDisplay> painter;
@@ -58,6 +60,7 @@ private:
     void updateFrameRate();
     void updateRenderer();
 
+    void paintSpectrum(juce::Graphics& g);
     void paintModeText(juce::Graphics& g);
     void paintFrameIntervalStats(juce::Graphics& g, juce::Rectangle<int>& r, juce::StatisticsAccumulator<double> const& frameIntervalSeconds);
     void paintFrameDurationStats(juce::Graphics& g, juce::Rectangle<int>& r, juce::StatisticsAccumulator<double> const& frameDurationSeconds);
