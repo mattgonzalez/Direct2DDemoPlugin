@@ -57,7 +57,7 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
     }
 #endif
 
-#if JUCE_OPENGL
+#if 0//JUCE_OPENGL
     {
         auto window = std::make_unique<OwnedWindow>(p, OwnedWindow::Mode::openGL);
 
