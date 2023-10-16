@@ -37,7 +37,7 @@ Direct2DDemoProcessor::Direct2DDemoProcessor() :
                 60.0f),
             std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{ rendererID, 1 }, "Render mode",
                 juce::StringArray{ "Software renderer", "Direct2D from VBlankAttachment callback", "Direct2D from dedicated thread" },
-                RenderMode::vblankAttachmentDirect2D)
+                RenderMode::software)
         }),
     parameters(this, state.state),
     fft(fftOrder),

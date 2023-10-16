@@ -24,7 +24,7 @@ SOFTWARE.
 
 #pragma once
 
-class OwnedWindow : public juce::HWNDComponent
+class ChildWindow : public juce::HWNDComponent
 {
 public:
     enum class Mode
@@ -34,16 +34,17 @@ public:
         openGL
     };
 
-    OwnedWindow(Direct2DDemoProcessor& processor_, Mode mode_) :
+    ChildWindow(Direct2DDemoProcessor& processor_, Mode mode_) :
         inner(*this),
         processor(processor_),
         mode(mode_)
     {
-        inner.addToDesktop(juce::ComponentPeer::windowIsOwned, nullptr);
+        setOpaque(true);
+        inner.addToDesktop(0, nullptr);
         inner.setVisible(true);
     }
 
-    ~OwnedWindow() override
+    ~ChildWindow() override
     {
 #if JUCE_OPENGL
         if (glContext)
@@ -64,8 +65,11 @@ public:
             {
                 if (auto* innerPeer = inner.getPeer())
                 {
-                    innerPeer->setCurrentRenderingEngine((int)mode);
-                    setHWND(innerPeer->getNativeHandle());
+                    if (innerPeer->getNativeHandle() != getHWND())
+                    {
+                        innerPeer->setCurrentRenderingEngine((int)mode);
+                        setHWND(innerPeer->getNativeHandle());
+                    }
                 }
                 break;
             }
@@ -93,20 +97,6 @@ public:
         g.fillAll(juce::Colours::black);
         g.setColour(juce::Colours::white);
         g.drawText(getName(), getLocalBounds(), juce::Justification::topLeft);
-    }
-
-    void resized() override
-    {
-#if JUCE_OPENGL
-        if (glContext)
-        {
-            inner.setBounds(getLocalBounds());
-        }
-        else
-#endif
-        {
-            updateHWNDBounds();
-        }
     }
 
     Direct2DDemoProcessor& processor;
@@ -171,10 +161,11 @@ public:
 
     struct Inner : public Component
     {
-        Inner(OwnedWindow& ownedWindow_) :
-            ownedWindow(ownedWindow_)
+        Inner(ChildWindow& owner_) :
+            owner(owner_)
         {
-            setOpaque(false);
+            setName("inner");
+            setOpaque(true);
         }
 
         void paint(juce::Graphics& g) override
@@ -192,19 +183,19 @@ public:
             {
                 juce::String text{ getPeer()->getCurrentRenderingEngine() > 0 ? "Direct2D" : "Software" };
 #if JUCE_OPENGL
-                if (ownedWindow.glContext)
+                if (owner.glContext)
                 {
                     text = "OpenGL";
                 }
 #endif
-                if (auto output = ownedWindow.processor.outputFIFO.getMostRecent())
+                if (auto output = owner.processor.outputFIFO.getMostRecent())
                 {
                     paintSpectrum(g, getLocalBounds().toFloat(), text, "Owned window", output->averageSpectrum);
                 }
             }
         }
 
-        OwnedWindow& ownedWindow;
+        ChildWindow& owner;
         //juce::dsp::Phase<double> phase;
         //int64_t lastPaintTicks = juce::Time::getHighResolutionTicks();
         //static constexpr double animationPeriodSeconds = 0.2;

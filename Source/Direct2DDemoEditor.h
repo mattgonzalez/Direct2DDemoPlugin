@@ -29,7 +29,7 @@ SOFTWARE.
 #include "SettingsComponent.h"
 #include "TimingSource.h"
 #include "SpectrumRingDisplay.h"
-#include "OwnedWindow.h"
+#include "ChildWindow.h"
 
 class Direct2DDemoEditor : public juce::AudioProcessorEditor,
     public juce::ValueTree::Listener
@@ -40,6 +40,7 @@ public:
 
     void paintTimerCallback();
 
+    void parentHierarchyChanged() override;
     void paint(juce::Graphics&) override;
 
     void resized() override;
@@ -55,7 +56,7 @@ private:
     TimingSource timingSource;
     SettingsComponent settingsComponent;
     std::unique_ptr<SpectrumRingDisplay> painter;
-    juce::OwnedArray<OwnedWindow> ownedWindows;
+    juce::OwnedArray<ChildWindow> childWindows;
 
     void updateFrameRate();
     void updateRenderer();

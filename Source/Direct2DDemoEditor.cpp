@@ -22,6 +22,7 @@ SOFTWARE.
 
 */
 
+#include <windows.h>
 #include "Direct2DDemoProcessor.h"
 #include "Direct2DDemoEditor.h"
 
@@ -41,29 +42,29 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
 
 #if 1
     {
-        auto window = std::make_unique<OwnedWindow>(p, OwnedWindow::Mode::softwareRenderer);
+        auto window = std::make_unique<ChildWindow>(p, ChildWindow::Mode::softwareRenderer);
         addAndMakeVisible(window.get());
         window->setName("Child A");
-        ownedWindows.add(std::move(window));
+        childWindows.add(std::move(window));
     }
 #endif
 
-#if JUCE_DIRECT2D
+#if 1 // JUCE_DIRECT2D
     {
-        auto window = std::make_unique<OwnedWindow>(p, OwnedWindow::Mode::direct2D);
+        auto window = std::make_unique<ChildWindow>(p, ChildWindow::Mode::direct2D);
         addAndMakeVisible(window.get());
         window->setName("Child B");
-        ownedWindows.add(std::move(window));
+        childWindows.add(std::move(window));
     }
 #endif
 
 #if 0//JUCE_OPENGL
     {
-        auto window = std::make_unique<OwnedWindow>(p, OwnedWindow::Mode::openGL);
+        auto window = std::make_unique<ChildWindow>(p, ChildWindow::Mode::openGL);
 
         addAndMakeVisible(window.get());
         window->setName("Child C");
-        ownedWindows.add(std::move(window));
+        childWindows.add(std::move(window));
     }
 #endif
 
@@ -73,7 +74,7 @@ Direct2DDemoEditor::Direct2DDemoEditor(Direct2DDemoProcessor& p)
 
     int width = 1000;
     int height = 1000;
-    if (0 == ownedWindows.size())
+    if (0 == childWindows.size())
     {
         width = 1400;
         height = 500;
@@ -95,7 +96,7 @@ void Direct2DDemoEditor::paintTimerCallback()
 {
     repaint();
 
-    for (auto window : ownedWindows)
+    for (auto window : childWindows)
     {
         window->inner.repaint();
     }
@@ -107,6 +108,38 @@ void Direct2DDemoEditor::paintTimerCallback()
     {
         audioProcessor.outputFIFO.advanceReadPosition();
     }
+}
+
+void Direct2DDemoEditor::parentHierarchyChanged()
+{
+    int renderMode = audioProcessor.parameters.renderer;
+    int renderingEngine = 0;
+    if (auto peer = getPeer())
+    {
+        switch (renderMode)
+        {
+        case RenderMode::software:
+        case RenderMode::openGL:
+            break;
+
+        case RenderMode::vblankAttachmentDirect2D:
+            renderingEngine = 1;
+            break;
+        }
+
+        peer->setCurrentRenderingEngine(renderingEngine);
+
+#if JUCE_OPENGL
+        if (renderMode == RenderMode::openGL)
+        {
+            openGLContext = std::make_unique<juce::OpenGLContext>();
+            openGLContext->attachTo(*this);
+        }
+#endif
+    }
+
+    updateFrameRate();
+    timingSource.setMode(renderMode);
 }
 
 void Direct2DDemoEditor::paint(juce::Graphics& g)
@@ -130,7 +163,7 @@ void Direct2DDemoEditor::paintSpectrum(juce::Graphics& g)
     if (auto output = audioProcessor.outputFIFO.getMostRecent())
     {
         auto area = getLocalBounds();
-        if (auto firstOwnedWindow = ownedWindows.getFirst())
+        if (auto firstOwnedWindow = childWindows.getFirst())
         {
             area = firstOwnedWindow->getBounds();
             area.translate(0, -area.getHeight() - 10);
@@ -141,7 +174,7 @@ void Direct2DDemoEditor::paintSpectrum(juce::Graphics& g)
 
         juce::Graphics::ScopedSaveState saveState{ g };
 
-        OwnedWindow::paintSpectrum(g, area.toFloat(), "Editor", "Editor paint()", output->averageSpectrum);
+        ChildWindow::paintSpectrum(g, area.toFloat(), "Editor", "Editor paint()", output->averageSpectrum);
     }
 }
 
@@ -150,6 +183,11 @@ void Direct2DDemoEditor::paintModeText(juce::Graphics& g)
     g.setFont(20.0f);
     g.setColour(juce::Colours::white);
     juce::String text;
+    if (auto peer = getPeer())
+    {
+        text = peer->getCurrentRenderingEngine() > 0 ? "Direct2D " : "Software renderer ";
+    }
+#if 0
     switch (audioProcessor.parameters.renderer)
     {
     case RenderMode::software:
@@ -164,6 +202,7 @@ void Direct2DDemoEditor::paintModeText(juce::Graphics& g)
         text = "OpenGL ";
         break;
     }
+#endif
 
     text << getWidth() << "x" << getHeight();
 
@@ -309,9 +348,9 @@ void Direct2DDemoEditor::resized()
 
     juce::BorderSize borders{ 50 };
     juce::Rectangle<int> r = borders.subtractedFrom(getLocalBounds());
-    r.setHeight(r.proportionOfHeight(0.8f / (float)(ownedWindows.size() + 1)));
+    r.setHeight(r.proportionOfHeight(0.8f / (float)(childWindows.size() + 1)));
     r.translate(0, r.getHeight() + 40);
-    for (auto window : ownedWindows)
+    for (auto window : childWindows)
     {
         window->setBounds(r);
         r.translate(0, r.getHeight() + 10);
@@ -376,32 +415,5 @@ void Direct2DDemoEditor::updateRenderer()
     openGLContext = nullptr;
 #endif
 
-    int renderMode = audioProcessor.parameters.renderer;
-    int renderingEngine = 0;
-    if (auto peer = getPeer())
-    {
-        switch (renderMode)
-        {
-        case RenderMode::software:
-        case RenderMode::openGL:
-            break;
-
-        case RenderMode::vblankAttachmentDirect2D:
-            renderingEngine = 1;
-            break;
-        }
-
-        peer->setCurrentRenderingEngine(renderingEngine);
-
-#if JUCE_OPENGL
-        if (renderMode == RenderMode::openGL)
-        {
-            openGLContext = std::make_unique<juce::OpenGLContext>();
-            openGLContext->attachTo(*this);
-        }
-#endif
-    }
-
-    updateFrameRate();
-    timingSource.setMode(renderMode);
+    parentHierarchyChanged();
 }
